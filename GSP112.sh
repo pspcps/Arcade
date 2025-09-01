@@ -2,9 +2,6 @@
 
 set -e
 
-# Ask user for deployment reason
-read -p "Please enter the reason for deploying the Hello World app: " reason
-
 # Ask user for App Engine region
 read -p "Enter the App Engine region (e.g., europe-west4): " region
 
