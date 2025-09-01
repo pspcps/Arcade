@@ -16,34 +16,43 @@ IMAGE_PROJECT="debian-cloud"
 DISK_TYPE="pd-balanced"
 DISK_SIZE="20GB"
 
-# Create the VM instance
-echo "Creating VM instance '$VM_NAME' in zone '$ZONE'..."
-gcloud compute instances create "$VM_NAME" \
-  --zone="$ZONE" \
-  --machine-type="$MACHINE_TYPE" \
-  --image-family="$IMAGE_FAMILY" \
-  --image-project="$IMAGE_PROJECT" \
-  --boot-disk-type="$DISK_TYPE" \
-  --boot-disk-size="$DISK_SIZE" \
-  --tags=http-server,https-server
+# Check if VM already exists
+if gcloud compute instances describe "$VM_NAME" --zone="$ZONE" &> /dev/null; then
+  echo "VM instance '$VM_NAME' already exists in zone '$ZONE'. Skipping creation."
+else
+  # Create the VM instance
+  echo "Creating VM instance '$VM_NAME' in zone '$ZONE'..."
+  gcloud compute instances create "$VM_NAME" \
+    --zone="$ZONE" \
+    --machine-type="$MACHINE_TYPE" \
+    --image-family="$IMAGE_FAMILY" \
+    --image-project="$IMAGE_PROJECT" \
+    --boot-disk-type="$DISK_TYPE" \
+    --boot-disk-size="$DISK_SIZE" \
+    --tags=http-server,https-server
 
-echo "Waiting for VM to start..."
-sleep 15
+  echo "Waiting for VM to start..."
+  sleep 15
+fi
 
 # Get external IP
 EXTERNAL_IP=$(gcloud compute instances describe "$VM_NAME" --zone="$ZONE" --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
-echo "VM created. External IP: $EXTERNAL_IP"
+echo "VM External IP: $EXTERNAL_IP"
 
 # Install Apache with error handling
-echo "Installing Apache web server..."
+echo "Installing Apache web server (if not already installed)..."
 gcloud compute ssh "$VM_NAME" --zone="$ZONE" --command='
   set -e
 
-  echo "Updating packages..."
-  sudo apt-get update
+  # Check if apache2 is installed
+  if dpkg -s apache2 >/dev/null 2>&1; then
+    echo "Apache is already installed."
+  else
+    echo "Updating packages and installing Apache and PHP..."
+    sudo apt-get update
 
-  echo "Installing Apache and PHP..."
-  sudo apt-get install -y apache2 php || sudo apt-get install -y apache2 php7.0
+    sudo apt-get install -y apache2 php || sudo apt-get install -y apache2 php7.0
+  fi
 
   echo "Trying to restart Apache using systemctl..."
   if ! sudo systemctl restart apache2; then
@@ -52,6 +61,16 @@ gcloud compute ssh "$VM_NAME" --zone="$ZONE" --command='
     sudo reboot
   fi
 '
+
+# Confirm Task 2 success before proceeding
+while true; do
+  read -rp "Has Apache been installed and is running correctly? (yes/no): " yn
+  case $yn in
+    [Yy]* ) break ;;
+    [Nn]* ) echo "Please fix Apache installation and start before proceeding. Exiting."; exit 1 ;;
+    * ) echo "Please answer yes or no." ;;
+  esac
+done
 
 # Install and configure the Ops Agent
 echo "Installing Google Cloud Ops Agent and configuring for Apache..."
