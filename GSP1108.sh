@@ -9,7 +9,7 @@ read -rp "Enter the GCP zone to create the VM (e.g., europe-west1-c): " ZONE
 
 # Set variables
 VM_NAME="quickstart-vm"
-MACHINE_TYPE="e2-standard-2"
+MACHINE_TYPE="e2-small"
 IMAGE_FAMILY="debian-11"
 IMAGE_PROJECT="debian-cloud"
 
@@ -20,6 +20,8 @@ gcloud compute instances create "$VM_NAME" \
   --machine-type="$MACHINE_TYPE" \
   --image-family="$IMAGE_FAMILY" \
   --image-project="$IMAGE_PROJECT" \
+  --boot-disk-type=pd-balanced \
+  --boot-disk-size=20GB \
   --tags=http-server,https-server \
   --metadata=startup-script='#! /bin/bash
     apt-get update
