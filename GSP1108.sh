@@ -9,7 +9,7 @@ read -rp "Enter the GCP zone to create the VM (e.g., europe-west1-c): " ZONE
 
 # Set variables
 VM_NAME="quickstart-vm"
-MACHINE_TYPE="e2-small"
+MACHINE_TYPE="e2-standard-2"
 IMAGE_FAMILY="debian-11"
 IMAGE_PROJECT="debian-cloud"
 
