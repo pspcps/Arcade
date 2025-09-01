@@ -34,22 +34,38 @@ sleep 15
 EXTERNAL_IP=$(gcloud compute instances describe "$VM_NAME" --zone="$ZONE" --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
 echo "VM created. External IP: $EXTERNAL_IP"
 
-# Install Apache on the VM
+# Install Apache with error handling
 echo "Installing Apache web server..."
 gcloud compute ssh "$VM_NAME" --zone="$ZONE" --command='
   set -e
+
+  echo "Updating packages..."
   sudo apt-get update
+
+  echo "Installing Apache and PHP..."
   sudo apt-get install -y apache2 php || sudo apt-get install -y apache2 php7.0
-  sudo systemctl restart apache2
+
+  echo "Trying to restart Apache using systemctl..."
+  if ! sudo systemctl restart apache2; then
+    echo "systemctl failed. Attempting to recover..."
+    sudo mount -o remount,rw /
+    sudo reboot
+  fi
 '
 
 # Install and configure the Ops Agent
 echo "Installing Google Cloud Ops Agent and configuring for Apache..."
 gcloud compute ssh "$VM_NAME" --zone="$ZONE" --command='
   set -e
+
+  echo "Installing Ops Agent..."
   curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
   sudo bash add-google-cloud-ops-agent-repo.sh --also-install
+
+  echo "Backing up existing Ops Agent config (if any)..."
   sudo cp /etc/google-cloud-ops-agent/config.yaml /etc/google-cloud-ops-agent/config.yaml.bak || true
+
+  echo "Writing Apache telemetry config..."
   sudo tee /etc/google-cloud-ops-agent/config.yaml > /dev/null <<EOF
 metrics:
   receivers:
@@ -70,7 +86,10 @@ logging:
       apache:
         receivers: [apache_access, apache_error]
 EOF
+
+  echo "Restarting Ops Agent..."
   sudo service google-cloud-ops-agent restart
+
   echo "Waiting 60 seconds for metrics to be collected..."
   sleep 60
 '
