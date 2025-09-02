@@ -270,7 +270,7 @@ echo "module example.com/mod" > go.mod
 
 deploy_with_retry slow-function \
   --gen2 \
-  --runtime go121 \
+  --runtime go123 \
   --entry-point HelloWorld \
   --source . \
   --region $REGION \
@@ -294,13 +294,9 @@ export full_path="${full_path}slow--function:version_1"
 
 gcloud run deploy slow-function \
 --image=$full_path \
+--min-instances=1 \
 --max-instances=4 \
---gen2 \
---runtime go123 \
---entry-point HelloWorld \
 --region=$REGION \
---allow-unauthenticated \
---trigger-http \
 --project=$PROJECT_ID
 
 # Test Again
@@ -371,8 +367,6 @@ gcloud run deploy slow-concurrent-function \
 --set-env-vars=LOG_EXECUTION_ID=true \
 --region=$REGION \
 --project=$PROJECT_ID \
---trigger-http \
---allow-unauthenticated \
 && gcloud run services update-traffic slow-concurrent-function --to-latest --region=$REGION
 
 # Final Test
