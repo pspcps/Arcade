@@ -74,26 +74,26 @@ echo
 echo "${COLOR_BLUE}${BOLD}🚀 Deploying HTTP Trigger Function...${COLOR_RESET}"
 echo
 
-mkdir ~/hello-http && cd $_
+# mkdir ~/hello-http && cd $_
 
-cat > index.js <<EOF
-const functions = require('@google-cloud/functions-framework');
+# cat > index.js <<EOF
+# const functions = require('@google-cloud/functions-framework');
 
-functions.http('helloWorld', (req, res) => {
-  res.status(200).send('HTTP with Node.js 22 in GCF 2nd gen!');
-});
-EOF
+# functions.http('helloWorld', (req, res) => {
+#   res.status(200).send('HTTP with Node.js 22 in GCF 2nd gen!');
+# });
+# EOF
 
-cat > package.json <<EOF
-{
-  "name": "nodejs-http-function",
-  "version": "1.0.0",
-  "main": "index.js",
-  "dependencies": {
-    "@google-cloud/functions-framework": "^3.0.0"
-  }
-}
-EOF
+# cat > package.json <<EOF
+# {
+#   "name": "nodejs-http-function",
+#   "version": "1.0.0",
+#   "main": "index.js",
+#   "dependencies": {
+#     "@google-cloud/functions-framework": "^3.0.0"
+#   }
+# }
+# EOF
 
 deploy_with_retry() {
   local function_name=$1
@@ -118,132 +118,132 @@ deploy_with_retry() {
   return 1
 }
 
-deploy_with_retry nodejs-http-function \
-  --gen2 \
-  --runtime nodejs22 \
-  --entry-point helloWorld \
-  --source . \
-  --region $REGION \
-  --trigger-http \
-  --timeout 600s \
-  --max-instances 1 \
-  --allow-unauthenticated
+# deploy_with_retry nodejs-http-function \
+#   --gen2 \
+#   --runtime nodejs22 \
+#   --entry-point helloWorld \
+#   --source . \
+#   --region $REGION \
+#   --trigger-http \
+#   --timeout 600s \
+#   --max-instances 1 \
+#   --allow-unauthenticated
 
-# Test HTTP Function
-echo
-echo "${COLOR_BLUE}${BOLD}🔧 Testing HTTP Function...${COLOR_RESET}"
-gcloud functions call nodejs-http-function --gen2 --region $REGION
+# # Test HTTP Function
+# echo
+# echo "${COLOR_BLUE}${BOLD}🔧 Testing HTTP Function...${COLOR_RESET}"
+# gcloud functions call nodejs-http-function --gen2 --region $REGION
 
-# Deploy Storage Function
-echo
-echo "${COLOR_BLUE}${BOLD}🚀 Deploying Storage Trigger Function...${COLOR_RESET}"
-echo
+# # Deploy Storage Function
+# echo
+# echo "${COLOR_BLUE}${BOLD}🚀 Deploying Storage Trigger Function...${COLOR_RESET}"
+# echo
 
-mkdir ~/hello-storage && cd $_
+# mkdir ~/hello-storage && cd $_
 
-cat > index.js <<EOF
-const functions = require('@google-cloud/functions-framework');
+# cat > index.js <<EOF
+# const functions = require('@google-cloud/functions-framework');
 
-functions.cloudEvent('helloStorage', (cloudevent) => {
-  console.log('Cloud Storage event with Node.js 22 in GCF 2nd gen!');
-  console.log(cloudevent);
-});
-EOF
+# functions.cloudEvent('helloStorage', (cloudevent) => {
+#   console.log('Cloud Storage event with Node.js 22 in GCF 2nd gen!');
+#   console.log(cloudevent);
+# });
+# EOF
 
-cat > package.json <<EOF
-{
-  "name": "nodejs-storage-function",
-  "version": "1.0.0",
-  "main": "index.js",
-  "dependencies": {
-    "@google-cloud/functions-framework": "^3.0.0"
-  }
-}
-EOF
+# cat > package.json <<EOF
+# {
+#   "name": "nodejs-storage-function",
+#   "version": "1.0.0",
+#   "main": "index.js",
+#   "dependencies": {
+#     "@google-cloud/functions-framework": "^3.0.0"
+#   }
+# }
+# EOF
 
-BUCKET="gs://gcf-gen2-storage-$PROJECT_ID"
-gsutil mb -l $REGION $BUCKET
+# BUCKET="gs://gcf-gen2-storage-$PROJECT_ID"
+# gsutil mb -l $REGION $BUCKET
 
-deploy_with_retry nodejs-storage-function \
-  --gen2 \
-  --runtime nodejs22 \
-  --entry-point helloStorage \
-  --source . \
-  --region $REGION \
-  --trigger-bucket $BUCKET \
-  --trigger-location $REGION \
-  --max-instances 1
+# deploy_with_retry nodejs-storage-function \
+#   --gen2 \
+#   --runtime nodejs22 \
+#   --entry-point helloStorage \
+#   --source . \
+#   --region $REGION \
+#   --trigger-bucket $BUCKET \
+#   --trigger-location $REGION \
+#   --max-instances 1
 
-# Test Storage Function
-echo "Hello World" > random.txt
-gsutil cp random.txt $BUCKET/random.txt
+# # Test Storage Function
+# echo "Hello World" > random.txt
+# gsutil cp random.txt $BUCKET/random.txt
 
-echo
-echo "${COLOR_BLUE}${BOLD}📋 Checking Storage Function Logs...${COLOR_RESET}"
-gcloud functions logs read nodejs-storage-function \
-  --region $REGION --gen2 --limit=100 --format "value(log)"
+# echo
+# echo "${COLOR_BLUE}${BOLD}📋 Checking Storage Function Logs...${COLOR_RESET}"
+# gcloud functions logs read nodejs-storage-function \
+#   --region $REGION --gen2 --limit=100 --format "value(log)"
 
-# Deploy VM Labeler Function
-echo
-echo "${COLOR_BLUE}${BOLD}🚀 Deploying VM Labeler Function...${COLOR_RESET}"
-echo
+# # Deploy VM Labeler Function
+# echo
+# echo "${COLOR_BLUE}${BOLD}🚀 Deploying VM Labeler Function...${COLOR_RESET}"
+# echo
 
-cd ~
-git clone https://github.com/GoogleCloudPlatform/eventarc-samples.git
-cd ~/eventarc-samples/gce-vm-labeler/gcf/nodejs
+# cd ~
+# git clone https://github.com/GoogleCloudPlatform/eventarc-samples.git
+# cd ~/eventarc-samples/gce-vm-labeler/gcf/nodejs
 
-deploy_with_retry gce-vm-labeler \
-  --gen2 \
-  --runtime nodejs22 \
-  --entry-point labelVmCreation \
-  --source . \
-  --region $REGION \
-  --trigger-event-filters="type=google.cloud.audit.log.v1.written,serviceName=compute.googleapis.com,methodName=beta.compute.instances.insert" \
-  --trigger-location $REGION \
-  --max-instances 1
+# deploy_with_retry gce-vm-labeler \
+#   --gen2 \
+#   --runtime nodejs22 \
+#   --entry-point labelVmCreation \
+#   --source . \
+#   --region $REGION \
+#   --trigger-event-filters="type=google.cloud.audit.log.v1.written,serviceName=compute.googleapis.com,methodName=beta.compute.instances.insert" \
+#   --trigger-location $REGION \
+#   --max-instances 1
 
-# Create Test VM
-echo
-echo "${COLOR_BLUE}${BOLD}🖥️ Creating Test VM Instance...${COLOR_RESET}"
-gcloud compute instances create instance-1 --project=$PROJECT_ID --zone=$ZONE --machine-type=e2-medium --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default --metadata=enable-osconfig=TRUE,enable-oslogin=true --maintenance-policy=MIGRATE --provisioning-model=STANDARD --service-account=$PROJECT_NUMBER-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/trace.append --create-disk=auto-delete=yes,boot=yes,device-name=instance-1,image=projects/debian-cloud/global/images/debian-12-bookworm-v20250311,mode=rw,size=10,type=pd-balanced --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --labels=goog-ops-agent-policy=v2-x86-template-1-4-0,goog-ec-src=vm_add-gcloud --reservation-affinity=any && printf 'agentsRule:\n  packageState: installed\n  version: latest\ninstanceFilter:\n  inclusionLabels:\n  - labels:\n      goog-ops-agent-policy: v2-x86-template-1-4-0\n' > config.yaml && gcloud compute instances ops-agents policies create goog-ops-agent-v2-x86-template-1-4-0-$ZONE --project=$PROJECT_ID --zone=$ZONE --file=config.yaml && gcloud compute resource-policies create snapshot-schedule default-schedule-1 --project=$PROJECT_ID --region=$REGION --max-retention-days=14 --on-source-disk-delete=keep-auto-snapshots --daily-schedule --start-time=08:00 && gcloud compute disks add-resource-policies instance-1 --project=$PROJECT_ID --zone=$ZONE --resource-policies=projects/$PROJECT_ID/regions/$REGION/resourcePolicies/default-schedule-1
+# # Create Test VM
+# echo
+# echo "${COLOR_BLUE}${BOLD}🖥️ Creating Test VM Instance...${COLOR_RESET}"
+# gcloud compute instances create instance-1 --project=$PROJECT_ID --zone=$ZONE --machine-type=e2-medium --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default --metadata=enable-osconfig=TRUE,enable-oslogin=true --maintenance-policy=MIGRATE --provisioning-model=STANDARD --service-account=$PROJECT_NUMBER-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/trace.append --create-disk=auto-delete=yes,boot=yes,device-name=instance-1,image=projects/debian-cloud/global/images/debian-12-bookworm-v20250311,mode=rw,size=10,type=pd-balanced --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --labels=goog-ops-agent-policy=v2-x86-template-1-4-0,goog-ec-src=vm_add-gcloud --reservation-affinity=any && printf 'agentsRule:\n  packageState: installed\n  version: latest\ninstanceFilter:\n  inclusionLabels:\n  - labels:\n      goog-ops-agent-policy: v2-x86-template-1-4-0\n' > config.yaml && gcloud compute instances ops-agents policies create goog-ops-agent-v2-x86-template-1-4-0-$ZONE --project=$PROJECT_ID --zone=$ZONE --file=config.yaml && gcloud compute resource-policies create snapshot-schedule default-schedule-1 --project=$PROJECT_ID --region=$REGION --max-retention-days=14 --on-source-disk-delete=keep-auto-snapshots --daily-schedule --start-time=08:00 && gcloud compute disks add-resource-policies instance-1 --project=$PROJECT_ID --zone=$ZONE --resource-policies=projects/$PROJECT_ID/regions/$REGION/resourcePolicies/default-schedule-1
 
-# Describe VM
-echo
-echo "${COLOR_BLUE}${BOLD}🔍 Checking VM Details...${COLOR_RESET}"
-gcloud compute instances describe instance-1 --zone $ZONE
+# # Describe VM
+# echo
+# echo "${COLOR_BLUE}${BOLD}🔍 Checking VM Details...${COLOR_RESET}"
+# gcloud compute instances describe instance-1 --zone $ZONE
 
-# Deploy Colored Function
-echo
-echo "${COLOR_BLUE}${BOLD}🎨 Deploying Colored Hello World Function...${COLOR_RESET}"
-echo
+# # Deploy Colored Function
+# echo
+# echo "${COLOR_BLUE}${BOLD}🎨 Deploying Colored Hello World Function...${COLOR_RESET}"
+# echo
 
-mkdir ~/hello-world-colored && cd $_
-touch requirements.txt
+# mkdir ~/hello-world-colored && cd $_
+# touch requirements.txt
 
-cat > main.py <<EOF
-import os
+# cat > main.py <<EOF
+# import os
 
-color = os.environ.get('COLOR')
+# color = os.environ.get('COLOR')
 
-def hello_world(request):
-    return f'<body style="background-color:{color}"><h1>Hello World!</h1></body>'
-EOF
+# def hello_world(request):
+#     return f'<body style="background-color:{color}"><h1>Hello World!</h1></body>'
+# EOF
 
-deploy_with_retry hello-world-colored \
-  --gen2 \
-  --runtime python39 \
-  --entry-point hello_world \
-  --source . \
-  --region $REGION \
-  --trigger-http \
-  --allow-unauthenticated \
-  --update-env-vars COLOR=yellow \
-  --max-instances 1
+# deploy_with_retry hello-world-colored \
+#   --gen2 \
+#   --runtime python39 \
+#   --entry-point hello_world \
+#   --source . \
+#   --region $REGION \
+#   --trigger-http \
+#   --allow-unauthenticated \
+#   --update-env-vars COLOR=yellow \
+#   --max-instances 1
 
-# Deploy Slow Go Function
-echo
-echo "${COLOR_BLUE}${BOLD}🐢 Deploying Slow Go Function...${COLOR_RESET}"
-echo
+# # Deploy Slow Go Function
+# echo
+# echo "${COLOR_BLUE}${BOLD}🐢 Deploying Slow Go Function...${COLOR_RESET}"
+# echo
 
 mkdir ~/min-instances && cd $_
 touch main.go
