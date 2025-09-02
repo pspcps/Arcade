@@ -75,7 +75,6 @@ gcloud compute ssh "$VM_NAME" --zone="$ZONE" --command="
   sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java || true
   cd speaking-with-a-webpage/01-hello-https
   nohup mvn clean jetty:run > jetty.log 2>&1 &
-  echo \$! > ./jetty.pid
 "
 
 echo "🟢 Jetty server for Task 3 started on VM."
@@ -87,12 +86,12 @@ read -p "✅ After confirming the servlet is working and you've checked your pro
 
 # Stop Task 3 Jetty server
 gcloud compute ssh "$VM_NAME" --zone="$ZONE" --command="
-  cd speaking-with-a-webpage/01-hello-https
-  if [ -f jetty.pid ]; then
-    kill \$(cat jetty.pid) && rm jetty.pid
+  PID=\$(sudo lsof -ti tcp:8443)
+  if [ -n \"\$PID\" ]; then
+    sudo kill \$PID
     echo '✅ Task 3 Jetty server stopped.'
   else
-    echo 'No jetty.pid file found, nothing to stop.'
+    echo 'No Jetty server found on port 8443.'
   fi
 "
 
