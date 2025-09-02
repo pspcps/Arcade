@@ -1,73 +1,81 @@
 #!/bin/bash
 
-set -e
+# Ask for Zone input
+read -p "Enter the zone (e.g. us-central1-b): " ZONE
 
+# Constants
 VM_NAME="speaking-with-a-webpage"
+MACHINE_TYPE="e2-medium"
 IMAGE_FAMILY="debian-11"
 IMAGE_PROJECT="debian-cloud"
-FIREWALL_NAME="dev-ports"
-
-read -p "Enter the Compute Engine Zone (e.g. us-central1-a): " ZONE
 
 echo "🚀 Creating VM '$VM_NAME' in zone '$ZONE'..."
 
-# Create the VM with necessary scopes and firewall access
-gcloud compute instances create "$VM_NAME" \
-    --zone="$ZONE" \
-    --image-family="$IMAGE_FAMILY" \
-    --image-project="$IMAGE_PROJECT" \
-    --machine-type=e2-medium \
-    --boot-disk-size=10GB \
-    --scopes=https://www.googleapis.com/auth/cloud-platform \
-    --tags=http-server,https-server
-    
-echo "✅ VM created successfully."
-
-# Add HTTP/HTTPS access to firewall
-echo "🌐 Adding firewall rules for ports 80 and 443 (HTTP/HTTPS)..."
-
-gcloud compute instances add-tags "$VM_NAME" \
-    --zone="$ZONE" \
-    --tags=http-server,https-server
-
-# Firewall rule for port 8443 (used by the lab)
-echo "🌐 Checking for firewall rule '$FIREWALL_NAME'..."
-
-if ! gcloud compute firewall-rules describe "$FIREWALL_NAME" &>/dev/null; then
-    gcloud compute firewall-rules create "$FIREWALL_NAME" \
-        --allow=tcp:8443 \
-        --source-ranges=0.0.0.0/0 \
-        --target-tags=http-server
-    echo "✅ Firewall rule '$FIREWALL_NAME' created."
-else
-    echo "⚠️ Firewall rule '$FIREWALL_NAME' already exists. Skipping."
+# Create the VM
+if ! gcloud compute instances create "$VM_NAME" \
+  --zone="$ZONE" \
+  --machine-type="$MACHINE_TYPE" \
+  --image-family="$IMAGE_FAMILY" \
+  --image-project="$IMAGE_PROJECT" \
+  --tags=http-server,https-server \
+  --boot-disk-size=10GB \
+  --boot-disk-type=pd-balanced \
+  --boot-disk-device-name="$VM_NAME" \
+  --quiet \
+  --no-shielded-secure-boot \
+  --metadata=enable-oslogin=TRUE \
+  --scopes=https://www.googleapis.com/auth/cloud-platform \
+  --create-disk=auto-delete=yes,boot=yes,device-name="$VM_NAME",image=projects/$IMAGE_PROJECT/global/images/family/$IMAGE_FAMILY,type=pd-balanced;do
+  echo "❌ VM creation failed. Exiting."
+  exit 1
 fi
 
-# SSH and install dependencies
-echo "🔧 Connecting to VM via SSH to install dependencies..."
+echo "✅ VM '$VM_NAME' created successfully."
 
-gcloud compute ssh "$VM_NAME" --zone="$ZONE" --command="\
-    sudo apt update && \
-    sudo apt install -y git maven openjdk-11-jdk && \
-    git clone https://github.com/googlecodelabs/speaking-with-a-webpage.git"
+# Open firewall for port 8443
+echo "🔓 Creating firewall rule to allow TCP traffic on port 8443..."
+if ! gcloud compute firewall-rules create dev-ports \
+  --allow=tcp:8443 \
+  --source-ranges=0.0.0.0/0 \
+  --target-tags=http-server,https-server \
+  --quiet; then
+  echo "⚠️ Firewall rule might already exist or failed to create."
+else
+  echo "✅ Firewall rule created."
+fi
 
-echo "✅ Dependencies installed and repo cloned."
+# Install packages and clone repo via SSH
+echo "🔧 Connecting via SSH and setting up environment..."
 
-# Get external IP
-EXTERNAL_IP=$(gcloud compute instances describe "$VM_NAME" \
-    --zone="$ZONE" \
-    --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+gcloud compute ssh "$VM_NAME" --zone="$ZONE" --quiet --command="bash -s" <<'EOF'
+  set -e
+  echo "📦 Updating system and installing required packages..."
+  sudo apt update -y && sudo apt install -y git maven openjdk-11-jdk
 
+  echo "📥 Cloning speaking-with-a-webpage repository..."
+  if [ -d "speaking-with-a-webpage" ]; then
+    echo "⚠️ Directory already exists. Skipping clone."
+  else
+    git clone https://github.com/googlecodelabs/speaking-with-a-webpage.git
+  fi
+
+  echo "✅ Environment setup completed."
+EOF
+
+# Show external IP
+EXTERNAL_IP=$(gcloud compute instances describe "$VM_NAME" --zone="$ZONE" --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+echo "🌐 Access your app via: https://$EXTERNAL_IP:8443 (after running the servlet)"
 echo ""
-echo "🎉 VM setup is complete!"
-echo "➡️ You can SSH into the VM again anytime:"
-echo "   gcloud compute ssh $VM_NAME --zone $ZONE"
-echo ""
-echo "➡️ Run the Java servlet:"
-echo "   cd speaking-with-a-webpage/01-hello-https"
+
+echo "📣 Next Steps (manual in SSH):"
+echo "1. Run the servlet for Task 3:"
+echo "   gcloud compute ssh $VM_NAME --zone=$ZONE"
+echo "   cd ~/speaking-with-a-webpage/01-hello-https"
 echo "   mvn clean jetty:run"
 echo ""
-echo "🌐 Open your browser and visit:"
-echo "   https://$EXTERNAL_IP:8443"
+echo "2. To test audio capture (Task 4):"
+echo "   Press CTRL+C to stop previous servlet"
+echo "   cd ~/speaking-with-a-webpage/02-webaudio"
+echo "   mvn clean jetty:run"
 echo ""
-echo "⚠️ You may see a warning due to self-signed cert. Proceed anyway."
+echo "📘 Note: You may need to accept the self-signed HTTPS certificate in your browser."
