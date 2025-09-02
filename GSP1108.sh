@@ -169,9 +169,8 @@ gcloud monitoring policies create --project="$PROJECT_ID" --notification-channel
 }
 '
 
-echo "Alerting policy created (if email notification channel exists)."
 
 echo
 echo "✅ Setup complete!"
-echo "Visit your Apache web server at: http://$EXTERNAL_IP"
+echo "Please Create alert policy as per mention in video"
 echo "Check Cloud Monitoring for metrics and alerts."
