@@ -276,7 +276,7 @@ deploy_with_retry slow-function \
   --region $REGION \
   --trigger-http \
   --allow-unauthenticated \
-  --max-instances 4
+  --max-instances 5
 
 # Test Slow Function
 echo
@@ -294,8 +294,8 @@ export full_path="${full_path}slow--function:version_1"
 
 gcloud run deploy slow-function \
 --image=$full_path \
---min-instances=1 \
---max-instances=4 \
+--min-instances=0 \
+--max-instances=5 \
 --region=$REGION \
 --project=$PROJECT_ID
 
@@ -361,8 +361,6 @@ export full_path="${REGION}-docker.pkg.dev/${PROJECT_ID}/gcf-artifacts/${spcl_pr
 
 gcloud run deploy slow-concurrent-function \
 --image=$full_path \
---concurrency=100 \
---cpu=1 \
 --max-instances=4 \
 --set-env-vars=LOG_EXECUTION_ID=true \
 --region=$REGION \
