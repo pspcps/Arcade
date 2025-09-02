@@ -1,0 +1,7 @@
+```
+curl -LO https://raw.githubusercontent.com/pspcps/Arcade/master/40609.sh
+
+sudo chmod +x 40609.sh
+
+./40609.sh
+```
