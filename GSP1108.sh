@@ -73,24 +73,24 @@ gcloud compute ssh "$VM_NAME" --zone="$ZONE" --command='
 echo "Waiting 30 seconds to stabilize after install..."
 sleep 30
 
-# Confirm Apache status interactively
-while true; do
-  echo "Please check if Apache is running on VM (http://$EXTERNAL_IP)."
-  read -rp "Is the Apache server running and displaying 'It works!'? (yes/no): " CONFIRM
-  if [[ "$CONFIRM" == "yes" ]]; then
-    break
-  else
-    echo "Retrying Apache install and restart..."
-    gcloud compute ssh "$VM_NAME" --zone="$ZONE" --command='
-      set -e
-      sudo systemctl restart apache2 || (
-        sudo mount -o remount,rw /
-        sudo reboot
-      )
-    '
-    sleep 30
-  fi
-done
+# # Confirm Apache status interactively
+# while true; do
+#   echo "Please check if Apache is running on VM (http://$EXTERNAL_IP)."
+#   read -rp "Is the Apache server running and displaying 'It works!'? (yes/no): " CONFIRM
+#   if [[ "$CONFIRM" == "yes" ]]; then
+#     break
+#   else
+#     echo "Retrying Apache install and restart..."
+#     gcloud compute ssh "$VM_NAME" --zone="$ZONE" --command='
+#       set -e
+#       sudo systemctl restart apache2 || (
+#         sudo mount -o remount,rw /
+#         sudo reboot
+#       )
+#     '
+#     sleep 30
+#   fi
+# done
 
 echo "Apache confirmed running. Proceeding with Ops Agent installation..."
 
