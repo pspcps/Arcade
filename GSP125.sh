@@ -19,11 +19,8 @@ gcloud compute instances create "$VM_NAME" \
     --machine-type=e2-medium \
     --boot-disk-size=10GB \
     --scopes=https://www.googleapis.com/auth/cloud-platform \
-    --access-scope=cloud-platform \
-    --tags=http-server,https-server \
-    --no-address \
-    --create-disk=auto-delete=yes,boot=yes,image-family=$IMAGE_FAMILY,image-project=$IMAGE_PROJECT
-
+    --tags=http-server,https-server
+    
 echo "✅ VM created successfully."
 
 # Add HTTP/HTTPS access to firewall
