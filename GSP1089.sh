@@ -276,7 +276,7 @@ deploy_with_retry slow-function \
   --region $REGION \
   --trigger-http \
   --allow-unauthenticated \
-  --max-instances 5
+  --max-instances 4
 
 # Test Slow Function
 echo
@@ -287,25 +287,6 @@ gcloud functions call slow-function --gen2 --region $REGION
 echo
 echo "${COLOR_BLUE}${BOLD}☁️ Deploying as Cloud Run Service...${COLOR_RESET}"
 
-export spcl_project=$(echo "$PROJECT_ID" | sed 's/-/--/g; s/$/__/g')
-export my_region=$(echo "$REGION" | sed 's/-/--/g; s/$/__/g')
-export full_path="$REGION-docker.pkg.dev/$PROJECT_ID/gcf-artifacts/$spcl_project$my_region"
-export full_path="${full_path}slow--function:version_1"
-
-gcloud run deploy slow-function \
---image=$full_path \
---min-instances=0 \
---max-instances=5 \
---region=$REGION \
---project=$PROJECT_ID
-
-# Test Again
-gcloud functions call slow-function --gen2 --region $REGION
-SLOW_URL=$(gcloud functions describe slow-function --region $REGION --gen2 --format="value(serviceConfig.uri)")
-
-echo
-echo "${COLOR_BLUE}${BOLD}⚡ Load Testing Slow Function...${COLOR_RESET}"
-hey -n 10 -c 10 $SLOW_URL
 
 # Progress Check
 function check_progress {
@@ -355,21 +336,6 @@ deploy_with_retry slow-concurrent-function \
   --allow-unauthenticated \
   --min-instances 1 \
   --max-instances 4
-
-# Deploy as Cloud Run with Concurrency
-export full_path="${REGION}-docker.pkg.dev/${PROJECT_ID}/gcf-artifacts/${spcl_project}${my_region}slow--concurrent--function:version_1"
-
-gcloud run deploy slow-concurrent-function \
---image=$full_path \
---max-instances=4 \
---set-env-vars=LOG_EXECUTION_ID=true \
---region=$REGION \
---project=$PROJECT_ID \
-&& gcloud run services update-traffic slow-concurrent-function --to-latest --region=$REGION
-
-# Final Test
-SLOW_CONCURRENT_URL=$(gcloud functions describe slow-concurrent-function --region $REGION --gen2 --format="value(serviceConfig.uri)")
-hey -n 10 -c 10 $SLOW_CONCURRENT_URL
 
 # Completion Messageecho
 echo "LAB COMPLETED SUCCESSFULLY!"
