@@ -12,7 +12,8 @@ IMAGE_PROJECT="debian-cloud"
 echo "🚀 Creating VM '$VM_NAME' in zone '$ZONE'..."
 
 # Create the VM
-if ! gcloud compute instances create "$VM_NAME" \
+# Create the VM
+if gcloud compute instances create "$VM_NAME" \
   --zone="$ZONE" \
   --machine-type="$MACHINE_TYPE" \
   --image-family="$IMAGE_FAMILY" \
@@ -24,11 +25,13 @@ if ! gcloud compute instances create "$VM_NAME" \
   --quiet \
   --no-shielded-secure-boot \
   --metadata=enable-oslogin=TRUE \
-  --scopes=https://www.googleapis.com/auth/cloud-platform \
-  --create-disk=auto-delete=yes,boot=yes,device-name="$VM_NAME",image=projects/$IMAGE_PROJECT/global/images/family/$IMAGE_FAMILY,type=pd-balanced;do
+  --scopes=https://www.googleapis.com/auth/cloud-platform; then
+  echo "✅ VM '$VM_NAME' created successfully."
+else
   echo "❌ VM creation failed. Exiting."
   exit 1
 fi
+
 
 echo "✅ VM '$VM_NAME' created successfully."
 
