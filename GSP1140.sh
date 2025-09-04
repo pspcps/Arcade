@@ -19,6 +19,13 @@ echo "🧾 Processor Display Name: $DISPLAY_NAME"
 echo "1⃣ Enabling Document AI API..."
 gcloud services enable documentai.googleapis.com
 
+
+pip3 install --upgrade pandas
+
+pip3 install --upgrade google-cloud-documentai
+
+
+
 # 2️⃣ Create the Invoice Parser Processor
 echo "2⃣ Creating Invoice Parser Processor..."
 cat <<EOF > create_invoice_processor.json
@@ -51,12 +58,6 @@ export INVOICE_PARSER_ID
 echo ""
 echo "✅ Variable INVOICE_PARSER_ID is set."
 echo "=============================="
-
-
-pip3 install --upgrade pandas
-
-pip3 install --upgrade google-cloud-documentai
-
 
 
 gcloud storage cp gs://cloud-samples-data/documentai/codelabs/specialized-processors/procurement_multi_document.pdf .
