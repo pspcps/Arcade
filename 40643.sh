@@ -42,14 +42,8 @@ bq query --use_legacy_sql=false "
 CREATE SEARCH INDEX IF NOT EXISTS product_search_index ON $BQ_TABLE_BACKTICK (ALL COLUMNS);
 "
 
-SEARCH_TERM="22 oz Water Bottle"
-echo -e "${CYAN}🔎 Searching for: \"$SEARCH_TERM\"...${NC}"
-bq query --use_legacy_sql=false "
-SELECT * FROM $BQ_TABLE_BACKTICK AS t
-WHERE SEARCH(t, \"$SEARCH_TERM\");
-"
-
 echo -e "\n${PURPLE}🎉 Script completed successfully!${NC}"
+echo -e "\n${YELLOW}🎉 Execute Search Query now!${NC}"
 echo -e "${GREEN}Thanks for watching!${NC}"
 echo -e "${YELLOW}💬 Please comment"
 echo -e "👍 Please like"
