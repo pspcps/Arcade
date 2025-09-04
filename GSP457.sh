@@ -123,8 +123,8 @@ fi
 echo
 
 
-echo "${YELLOW_TEXT}Waiting (180s) for manual steps completion (if any)...${RESET_FORMAT}"
-sleep 180
+echo "${YELLOW_TEXT}Waiting (30s) for manual steps completion (if any)...${RESET_FORMAT}"
+sleep 30
 
 echo "${CYAN_TEXT}Exporting data from FHIR store de_id to BigQuery dataset de_id...${RESET_FORMAT}"
 gcloud healthcare fhir-stores export bq de_id \
