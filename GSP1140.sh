@@ -26,9 +26,9 @@ pip3 install --upgrade google-cloud-documentai
 
 
 
-# 2️⃣ Create the Invoice Parser Processor
-echo "2⃣ Creating Invoice Parser Processor..."
-cat <<EOF > create_invoice_processor.json
+# 3️⃣ Create Processor
+echo "3⃣ Creating Processor..."
+cat <<EOF > create_proc.json
 {
   "type": "${PROCESSOR_TYPE}",
   "displayName": "${DISPLAY_NAME}"
@@ -38,11 +38,13 @@ EOF
 PROC_RESPONSE=$(curl -s -X POST \
   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
   -H "Content-Type: application/json" \
-  -d @create_invoice_processor.json \
+  -d @create_proc.json \
   "https://${LOCATION}-documentai.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/processors")
 
-PROCESSOR_NAME=$(echo "$PROC_RESPONSE" | grep -o '"name"[ ]*:[ ]*"projects/[^"]*' | cut -d'"' -f2)
+PROCESSOR_NAME=$(echo "$PROC_RESPONSE" | grep -o '"name"[ ]*:[ ]*"[^"]*' | cut -d'"' -f4)
 INVOICE_PARSER_ID=$(basename "$PROCESSOR_NAME")
+
+echo "✅ Processor Created: $INVOICE_PARSER_ID"
 
 # 3️⃣ Output Results
 echo ""
