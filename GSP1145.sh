@@ -90,39 +90,4 @@ gcloud dataplex assets create $ASSET_NAME \
 
 echo_success "Asset created."
 
-# 4. Generate Aspect Type JSON
-echo_info "Generating aspect type template ($ASPECT_JSON_FILE)..."
-cat >$ASPECT_JSON_FILE <<EOF
-{
-  "displayName": "$ASPECT_TYPE_DISPLAY_NAME",
-  "description": "Flags columns with protected data status",
-  "template": {
-    "fields": [
-      {
-        "fieldId": "protected_data_flag",
-        "displayName": "Protected Data Flag",
-        "description": "Indicates if this column contains protected data",
-        "dataType": {
-          "type": "ENUM",
-          "enumValues": ["Yes", "No"]
-        },
-        "isRequired": true
-      }
-    ]
-  },
-  "publicAsset": true
-}
-EOF
-echo_success "Aspect JSON created."
-
-# 5. Create Aspect Type via CLI
-echo_info "Creating aspect type..."
-gcloud dataplex aspect-types create $ASPECT_TYPE_ID \
-  --project=$PROJECT_ID --location=$REGION \
-  --display-name="$ASPECT_TYPE_DISPLAY_NAME" \
-  --metadata-template-file-name=$ASPECT_JSON_FILE
-
-echo_success "Aspect type '$ASPECT_TYPE_ID' created."
-
-echo_success "All tasks completed successfully!"
 echo_info "Proceed to the UI to apply aspects to table columns."
