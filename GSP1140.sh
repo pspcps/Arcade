@@ -9,7 +9,7 @@ echo "=============================="
 PROJECT_ID=$(gcloud config get-value project)
 LOCATION="${1:-us}"  # Default to "us" if not passed as argument
 DISPLAY_NAME="lab-invoice-parser"
-PROCESSOR_TYPE="INVOICE_PARSER"
+PROCESSOR_TYPE="invoice-parser"
 
 echo "🧩 Project: $PROJECT_ID"
 echo "📍 Region: $LOCATION"
@@ -17,12 +17,12 @@ echo "🧾 Processor Display Name: $DISPLAY_NAME"
 
 # 1️⃣ Enable Document AI API (if not already enabled)
 echo "1⃣ Enabling Document AI API..."
-gcloud services enable documentai.googleapis.com
+# gcloud services enable documentai.googleapis.com
 
 
-pip3 install --upgrade pandas
+# pip3 install --upgrade pandas
 
-pip3 install --upgrade google-cloud-documentai
+# pip3 install --upgrade google-cloud-documentai
 
 
 
