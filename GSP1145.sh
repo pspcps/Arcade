@@ -16,6 +16,7 @@ ASSET_DISPLAY_NAME="Customer Details Dataset"
 BQ_DATASET="${PROJECT_ID}.customers"
 ASPECT_TYPE_ID="protected-data-aspect"
 ASPECT_TYPE_DISPLAY_NAME="Protected Data Aspect"
+ASPECT_JSON_FILE="aspect_type.json"
 
 echo "Using project: $PROJECT_ID"
 echo "Region: $REGION"
@@ -28,10 +29,29 @@ gcloud dataplex lakes create $LAKE_NAME \
   --display-name="$LAKE_DISPLAY_NAME"
 
 # Wait for lake to be ready
-echo "Waiting for lake to be active..."
-until [[ "$(gcloud dataplex lakes describe $LAKE_NAME --location=$REGION --project=$PROJECT_ID --format='value(state)')" == "ACTIVE" ]]; do
-  echo "Waiting for lake to become ACTIVE..."
-  sleep 60
+echo "Waiting for lake to become ACTIVE..."
+ATTEMPTS=0
+MAX_ATTEMPTS=20
+
+while true; do
+  LAKE_STATE=$(gcloud dataplex lakes describe $LAKE_NAME \
+    --location=$REGION \
+    --project=$PROJECT_ID \
+    --format='value(state)' 2>/dev/null)
+
+  if [[ "$LAKE_STATE" == "ACTIVE" ]]; then
+    echo "Lake is now ACTIVE."
+    break
+  fi
+
+  ((ATTEMPTS++))
+  if [[ $ATTEMPTS -ge $MAX_ATTEMPTS ]]; then
+    echo "ERROR: Lake did not become ACTIVE within expected time."
+    exit 1
+  fi
+
+  echo "Lake state: $LAKE_STATE. Waiting 30 seconds..."
+  sleep 30
 done
 
 # 2. Create a curated zone
@@ -45,31 +65,54 @@ gcloud dataplex zones create $ZONE_NAME \
   --resource-location-type=SINGLE_REGION
 
 # Wait for zone to be active
-echo "Waiting for zone to be active..."
-until [[ "$(gcloud dataplex zones describe $ZONE_NAME --lake=$LAKE_NAME --location=$REGION --project=$PROJECT_ID --format='value(state)')" == "ACTIVE" ]]; do
-  echo "Waiting for zone to become ACTIVE..."
-  sleep 60
+echo "Waiting for zone to become ACTIVE..."
+ATTEMPTS=0
+
+while true; do
+  ZONE_STATE=$(gcloud dataplex zones describe $ZONE_NAME \
+    --lake=$LAKE_NAME \
+    --location=$REGION \
+    --project=$PROJECT_ID \
+    --format='value(state)' 2>/dev/null)
+
+  if [[ "$ZONE_STATE" == "ACTIVE" ]]; then
+    echo "Zone is now ACTIVE."
+    break
+  fi
+
+  ((ATTEMPTS++))
+  if [[ $ATTEMPTS -ge $MAX_ATTEMPTS ]]; then
+    echo "ERROR: Zone did not become ACTIVE within expected time."
+    exit 1
+  fi
+
+  echo "Zone state: $ZONE_STATE. Waiting 30 seconds..."
+  sleep 30
 done
 
-# 3. Add BigQuery dataset as asset
-echo "Attaching BigQuery dataset as an asset..."
+# 3. Attach BigQuery dataset as asset
+echo "Attaching BigQuery dataset as asset..."
 gcloud dataplex assets create $ASSET_NAME \
   --project=$PROJECT_ID \
   --location=$REGION \
   --lake=$LAKE_NAME \
   --zone=$ZONE_NAME \
   --display-name="$ASSET_DISPLAY_NAME" \
-  --asset-type=BIGQUERY_DATASET \
+  --resource-type=BIGQUERY_DATASET \
   --resource-name=projects/$PROJECT_ID/datasets/customers \
   --discovery-enabled
 
-# 4. Create an aspect type
-echo "Creating aspect type..."
-gcloud dataplex aspect-types create $ASPECT_TYPE_ID \
+# 4. Create aspect type via JSON
+if [[ ! -f "$ASPECT_JSON_FILE" ]]; then
+  echo "ERROR: Required file '$ASPECT_JSON_FILE' not found!"
+  exit 1
+fi
+
+echo "Creating aspect type from JSON..."
+gcloud dataplex aspect-types import $ASPECT_TYPE_ID \
   --project=$PROJECT_ID \
   --location=$REGION \
-  --display-name="$ASPECT_TYPE_DISPLAY_NAME" \
-  --fields="protected_data_flag:enum:Yes,No:required"
+  --file=$ASPECT_JSON_FILE
 
-echo "Script complete. For tagging aspects and columns, continue in the Dataplex Universal Catalog UI as tagging via CLI is limited."
-
+echo "✅ Script complete!"
+echo "👉 Proceed to Dataplex UI to tag aspects to schema columns."
