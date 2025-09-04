@@ -17,12 +17,12 @@ echo "🧾 Processor Display Name: $DISPLAY_NAME"
 
 # 1️⃣ Enable Document AI API (if not already enabled)
 echo "1⃣ Enabling Document AI API..."
-# gcloud services enable documentai.googleapis.com
+gcloud services enable documentai.googleapis.com
 
 
-# pip3 install --upgrade pandas
+pip3 install --upgrade pandas
 
-# pip3 install --upgrade google-cloud-documentai
+pip3 install --upgrade google-cloud-documentai
 
 
 
