@@ -1,9 +1,57 @@
+#!/bin/bash
+set -e
 
-# Prompt user to input three regions
-read -p "Enter INVOICE_PARSER_ID: " INVOICE_PARSER_ID
+echo "=============================="
+echo "📄 Creating Invoice Parser Processor"
+echo "=============================="
 
+# 🔧 Configuration
+PROJECT_ID=$(gcloud config get-value project)
+LOCATION="${1:-us}"  # Default to "us" if not passed as argument
+DISPLAY_NAME="lab-invoice-parser"
+PROCESSOR_TYPE="INVOICE_PARSER"
 
+echo "🧩 Project: $PROJECT_ID"
+echo "📍 Region: $LOCATION"
+echo "🧾 Processor Display Name: $DISPLAY_NAME"
+
+# 1️⃣ Enable Document AI API (if not already enabled)
+echo "1⃣ Enabling Document AI API..."
 gcloud services enable documentai.googleapis.com
+
+# 2️⃣ Create the Invoice Parser Processor
+echo "2⃣ Creating Invoice Parser Processor..."
+cat <<EOF > create_invoice_processor.json
+{
+  "type": "${PROCESSOR_TYPE}",
+  "displayName": "${DISPLAY_NAME}"
+}
+EOF
+
+PROC_RESPONSE=$(curl -s -X POST \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -d @create_invoice_processor.json \
+  "https://${LOCATION}-documentai.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/processors")
+
+PROCESSOR_NAME=$(echo "$PROC_RESPONSE" | grep -o '"name"[ ]*:[ ]*"projects/[^"]*' | cut -d'"' -f2)
+INVOICE_PARSER_ID=$(basename "$PROCESSOR_NAME")
+
+# 3️⃣ Output Results
+echo ""
+echo "✅ Invoice Parser Processor Created!"
+echo "🔗 View in Console:"
+echo "   https://console.cloud.google.com/document-ai/location/${LOCATION}/processors/${INVOICE_PARSER_ID}?project=${PROJECT_ID}"
+echo ""
+echo "📌 Processor ID: $INVOICE_PARSER_ID"
+
+# Optional: export for current shell session
+export INVOICE_PARSER_ID
+
+echo ""
+echo "✅ Variable INVOICE_PARSER_ID is set."
+echo "=============================="
+
 
 pip3 install --upgrade pandas
 
