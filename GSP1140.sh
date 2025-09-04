@@ -9,7 +9,7 @@ echo "=============================="
 PROJECT_ID=$(gcloud config get-value project)
 LOCATION="${1:-us}"  # Default to "us" if not passed as argument
 DISPLAY_NAME="lab-invoice-parser"
-PROCESSOR_TYPE="invoice-parser"
+PROCESSOR_TYPE="INVOICE_PROCESSOR"
 
 echo "🧩 Project: $PROJECT_ID"
 echo "📍 Region: $LOCATION"
