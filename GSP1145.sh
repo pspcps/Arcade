@@ -1,10 +1,40 @@
 #!/bin/bash
 
-# Prompt for the region
+# ----------------------------
+# 🎨 Color Functions
+# ----------------------------
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[1;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+function echo_info() {
+  echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+function echo_success() {
+  echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+function echo_warn() {
+  echo -e "${YELLOW}[WAITING]${NC} $1"
+}
+
+function echo_error() {
+  echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# ----------------------------
+# 🛠️ Setup
+# ----------------------------
 read -p "Enter the region (e.g., us-east4): " REGION
 
-# Fetch the active GCP project
 PROJECT_ID=$(gcloud config get-value project)
+if [[ -z "$PROJECT_ID" ]]; then
+  echo_error "Failed to get GCP project ID. Is gcloud authenticated?"
+  exit 1
+fi
 
 # Variables
 LAKE_NAME="orders-lake"
@@ -18,18 +48,20 @@ ASPECT_TYPE_ID="protected-data-aspect"
 ASPECT_TYPE_DISPLAY_NAME="Protected Data Aspect"
 ASPECT_JSON_FILE="aspect_type.json"
 
-echo "Using project: $PROJECT_ID"
-echo "Region: $REGION"
+echo_info "Using project: $PROJECT_ID"
+echo_info "Using region: $REGION"
 
-# 1. Create a Dataplex lake
-echo "Creating Dataplex lake..."
+# ----------------------------
+# 1️⃣ Create Lake
+# ----------------------------
+echo_info "Creating Dataplex lake..."
 gcloud dataplex lakes create $LAKE_NAME \
   --location=$REGION \
   --project=$PROJECT_ID \
   --display-name="$LAKE_DISPLAY_NAME"
 
-# Wait for lake to be ready
-echo "Waiting for lake to become ACTIVE..."
+# Wait until lake is ACTIVE
+echo_warn "Waiting for lake to become ACTIVE..."
 ATTEMPTS=0
 MAX_ATTEMPTS=20
 
@@ -40,22 +72,24 @@ while true; do
     --format='value(state)' 2>/dev/null)
 
   if [[ "$LAKE_STATE" == "ACTIVE" ]]; then
-    echo "Lake is now ACTIVE."
+    echo_success "Lake is now ACTIVE."
     break
   fi
 
   ((ATTEMPTS++))
   if [[ $ATTEMPTS -ge $MAX_ATTEMPTS ]]; then
-    echo "ERROR: Lake did not become ACTIVE within expected time."
+    echo_error "Lake did not become ACTIVE in time."
     exit 1
   fi
 
-  echo "Lake state: $LAKE_STATE. Waiting 30 seconds..."
+  echo_warn "Lake state: $LAKE_STATE. Retrying in 30 seconds..."
   sleep 30
 done
 
-# 2. Create a curated zone
-echo "Creating curated zone..."
+# ----------------------------
+# 2️⃣ Create Zone
+# ----------------------------
+echo_info "Creating curated zone..."
 gcloud dataplex zones create $ZONE_NAME \
   --lake=$LAKE_NAME \
   --location=$REGION \
@@ -64,8 +98,8 @@ gcloud dataplex zones create $ZONE_NAME \
   --type=CURATED \
   --resource-location-type=SINGLE_REGION
 
-# Wait for zone to be active
-echo "Waiting for zone to become ACTIVE..."
+# Wait until zone is ACTIVE
+echo_warn "Waiting for zone to become ACTIVE..."
 ATTEMPTS=0
 
 while true; do
@@ -76,22 +110,24 @@ while true; do
     --format='value(state)' 2>/dev/null)
 
   if [[ "$ZONE_STATE" == "ACTIVE" ]]; then
-    echo "Zone is now ACTIVE."
+    echo_success "Zone is now ACTIVE."
     break
   fi
 
   ((ATTEMPTS++))
   if [[ $ATTEMPTS -ge $MAX_ATTEMPTS ]]; then
-    echo "ERROR: Zone did not become ACTIVE within expected time."
+    echo_error "Zone did not become ACTIVE in time."
     exit 1
   fi
 
-  echo "Zone state: $ZONE_STATE. Waiting 30 seconds..."
+  echo_warn "Zone state: $ZONE_STATE. Retrying in 30 seconds..."
   sleep 30
 done
 
-# 3. Attach BigQuery dataset as asset
-echo "Attaching BigQuery dataset as asset..."
+# ----------------------------
+# 3️⃣ Attach BigQuery Dataset as Asset
+# ----------------------------
+echo_info "Attaching BigQuery dataset as an asset..."
 gcloud dataplex assets create $ASSET_NAME \
   --project=$PROJECT_ID \
   --location=$REGION \
@@ -102,17 +138,50 @@ gcloud dataplex assets create $ASSET_NAME \
   --resource-name=projects/$PROJECT_ID/datasets/customers \
   --discovery-enabled
 
-# 4. Create aspect type via JSON
-if [[ ! -f "$ASPECT_JSON_FILE" ]]; then
-  echo "ERROR: Required file '$ASPECT_JSON_FILE' not found!"
-  exit 1
-fi
+echo_success "Asset successfully attached."
 
-echo "Creating aspect type from JSON..."
+# ----------------------------
+# 4️⃣ Create Aspect Type JSON
+# ----------------------------
+echo_info "Generating aspect type JSON file..."
+
+cat > $ASPECT_JSON_FILE <<EOF
+{
+  "displayName": "$ASPECT_TYPE_DISPLAY_NAME",
+  "description": "Flags columns with protected data status",
+  "template": {
+    "fields": [
+      {
+        "fieldId": "protected_data_flag",
+        "displayName": "Protected Data Flag",
+        "description": "Indicates if this column contains protected data",
+        "dataType": {
+          "type": "ENUM",
+          "enumValues": ["Yes", "No"]
+        },
+        "isRequired": true
+      }
+    ]
+  },
+  "publicAsset": true
+}
+EOF
+
+echo_success "Aspect type JSON created: $ASPECT_JSON_FILE"
+
+# ----------------------------
+# 5️⃣ Import Aspect Type
+# ----------------------------
+echo_info "Creating aspect type in Dataplex..."
 gcloud dataplex aspect-types import $ASPECT_TYPE_ID \
   --project=$PROJECT_ID \
   --location=$REGION \
   --file=$ASPECT_JSON_FILE
 
-echo "✅ Script complete!"
-echo "👉 Proceed to Dataplex UI to tag aspects to schema columns."
+echo_success "Aspect type '$ASPECT_TYPE_ID' created successfully."
+
+# ----------------------------
+# ✅ Done
+# ----------------------------
+echo_success "Script completed successfully!"
+echo_info "👉 Proceed to Dataplex Universal Catalog UI to apply aspects to assets or columns."
