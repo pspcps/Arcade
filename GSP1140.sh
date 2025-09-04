@@ -5,6 +5,12 @@ echo "=============================="
 echo "📄 Creating Invoice Parser Processor"
 echo "=============================="
 
+
+
+# Prompt user to input three regions
+read -p "Enter INVOICE_PARSER_ID: " INVOICE_PARSER_ID
+
+
 # 🔧 Configuration
 PROJECT_ID=$(gcloud config get-value project)
 LOCATION="${1:-us}"  # Default to "us" if not passed as argument
@@ -26,40 +32,41 @@ pip3 install --upgrade google-cloud-documentai
 
 
 
-# 3️⃣ Create Processor
-echo "3⃣ Creating Processor..."
-cat <<EOF > create_proc.json
-{
-  "type": "${PROCESSOR_TYPE}",
-  "displayName": "${DISPLAY_NAME}"
-}
-EOF
+# # 3️⃣ Create Processor
+# echo "3⃣ Creating Processor..."
+# cat <<EOF > create_proc.json
+# {
+#   "type": "${PROCESSOR_TYPE}",
+#   "displayName": "${DISPLAY_NAME}"
+# }
+# EOF
 
-PROC_RESPONSE=$(curl -s -X POST \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Content-Type: application/json" \
-  -d @create_proc.json \
-  "https://${LOCATION}-documentai.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/processors")
+# PROC_RESPONSE=$(curl -s -X POST \
+#   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+#   -H "Content-Type: application/json" \
+#   -d @create_proc.json \
+#   "https://${LOCATION}-documentai.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/processors")
 
-PROCESSOR_NAME=$(echo "$PROC_RESPONSE" | grep -o '"name"[ ]*:[ ]*"[^"]*' | cut -d'"' -f4)
-INVOICE_PARSER_ID=$(basename "$PROCESSOR_NAME")
+# PROCESSOR_NAME=$(echo "$PROC_RESPONSE" | grep -o '"name"[ ]*:[ ]*"[^"]*' | cut -d'"' -f4)
+# INVOICE_PARSER_ID=$(basename "$PROCESSOR_NAME")
 
-echo "✅ Processor Created: $INVOICE_PARSER_ID"
+# echo "✅ Processor Created: $INVOICE_PARSER_ID"
 
-# 3️⃣ Output Results
-echo ""
-echo "✅ Invoice Parser Processor Created!"
-echo "🔗 View in Console:"
-echo "   https://console.cloud.google.com/document-ai/location/${LOCATION}/processors/${INVOICE_PARSER_ID}?project=${PROJECT_ID}"
-echo ""
-echo "📌 Processor ID: $INVOICE_PARSER_ID"
+# # 3️⃣ Output Results
+# echo ""
+# echo "✅ Invoice Parser Processor Created!"
+# echo "🔗 View in Console:"
+# echo "   https://console.cloud.google.com/document-ai/location/${LOCATION}/processors/${INVOICE_PARSER_ID}?project=${PROJECT_ID}"
+# echo ""
+# echo "📌 Processor ID: $INVOICE_PARSER_ID"
 
 # Optional: export for current shell session
-export INVOICE_PARSER_ID
+# export INVOICE_PARSER_ID
 
-echo ""
-echo "✅ Variable INVOICE_PARSER_ID is set."
-echo "=============================="
+# echo ""
+# echo "✅ Variable INVOICE_PARSER_ID is set."
+# echo "=============================="
+
 
 
 gcloud storage cp gs://cloud-samples-data/documentai/codelabs/specialized-processors/procurement_multi_document.pdf .
