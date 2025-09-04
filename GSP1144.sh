@@ -23,6 +23,8 @@ BOLD=`tput bold`
 RESET=`tput sgr0`
 #----------------------------------------------------start--------------------------------------------------#
 
+read -rp "Enter the GCP REGION to create the VM (e.g., europe-west1): " REGION
+
 echo "${YELLOW}${BOLD}Starting${RESET}" "${GREEN}${BOLD}Execution${RESET}"
 
 gcloud services enable dataplex.googleapis.com
