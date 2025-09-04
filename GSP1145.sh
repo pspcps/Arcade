@@ -31,7 +31,7 @@ gcloud dataplex lakes create $LAKE_NAME \
 echo "Waiting for lake to be active..."
 until [[ "$(gcloud dataplex lakes describe $LAKE_NAME --location=$REGION --project=$PROJECT_ID --format='value(state)')" == "ACTIVE" ]]; do
   echo "Waiting for lake to become ACTIVE..."
-  sleep 10
+  sleep 60
 done
 
 # 2. Create a curated zone
@@ -42,13 +42,13 @@ gcloud dataplex zones create $ZONE_NAME \
   --project=$PROJECT_ID \
   --display-name="$ZONE_DISPLAY_NAME" \
   --type=CURATED \
-  --resource-location-type=REGIONAL
+  --resource-location-type=SINGLE_REGION
 
 # Wait for zone to be active
 echo "Waiting for zone to be active..."
 until [[ "$(gcloud dataplex zones describe $ZONE_NAME --lake=$LAKE_NAME --location=$REGION --project=$PROJECT_ID --format='value(state)')" == "ACTIVE" ]]; do
   echo "Waiting for zone to become ACTIVE..."
-  sleep 10
+  sleep 60
 done
 
 # 3. Add BigQuery dataset as asset
