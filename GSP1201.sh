@@ -14,9 +14,7 @@ if [[ -z "$REGION" ]]; then
   exit 1
 fi
 
-# === 🔐 Authenticate Automatically ===
-echo "🔐 Authenticating with gcloud..."
-gcloud auth login --quiet
+
 
 # === 📁 Project Setup ===
 PROJECT_ID=$(gcloud config get-value project)
@@ -48,6 +46,13 @@ echo "🏗️ Creating Artifact Registry (if needed)..."
 gcloud artifacts repositories create "$AR_REPO" \
   --location="$REGION" \
   --repository-format=Docker || echo "ℹ️ Repo may already exist."
+
+
+# === 🔐 Authenticate Automatically ===
+echo "🔐 Authenticating with gcloud..."
+gcloud auth login --quiet
+
+
 
 # === 🔐 Docker Auth ===
 echo "🔐 Configuring Docker authentication..."
