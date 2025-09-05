@@ -7,8 +7,6 @@ echo "=============================="
 
 
 
-# Prompt user to input three regions
-read -p "Enter INVOICE_PARSER_ID: " INVOICE_PARSER_ID
 
 
 # 🔧 Configuration
@@ -30,6 +28,11 @@ pip3 install --upgrade pandas
 
 pip3 install --upgrade google-cloud-documentai
 
+
+echo "📄 Please Follow Video For Creating PROCESSOR"
+
+# Prompt user to input three regions
+read -p "Enter INVOICE_PARSER_ID: " INVOICE_PARSER_ID
 
 
 # # 3️⃣ Create Processor
