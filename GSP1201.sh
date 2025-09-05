@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Exit on error
+# Exit if any command fails
 set -e
 
 echo "=============================="
-echo "🔐 Cloud Run Auth & Deploy Script"
+echo "🚀 Cloud Run Auth & Deploy Script"
 echo "=============================="
 
 # === 🌍 Ask for Region ===
@@ -14,16 +14,9 @@ if [[ -z "$REGION" ]]; then
   exit 1
 fi
 
-# === 🧑‍💻 Authentication Check ===
-echo "🔎 Checking authentication..."
-gcloud auth list
-
-read -p "👉 Is the correct account active above? (y/n): " CONFIRM
-if [[ "$CONFIRM" != "y" ]]; then
-  echo "🔁 Run this command to login:"
-  echo "   gcloud auth login"
-  exit 1
-fi
+# === 🔐 Authenticate Automatically ===
+echo "🔐 Authenticating with gcloud..."
+gcloud auth login --quiet
 
 # === 📁 Project Setup ===
 PROJECT_ID=$(gcloud config get-value project)
@@ -38,14 +31,14 @@ echo "   ➤ Region:  $REGION"
 echo "   ➤ Repo:    $AR_REPO"
 echo "   ➤ Service: $SERVICE_NAME"
 
-# === 🔓 Enable Required APIs ===
+# === 🔌 Enable Required Services ===
 echo "🔌 Enabling required services..."
 gcloud services enable \
   cloudbuild.googleapis.com \
   run.googleapis.com \
   artifactregistry.googleapis.com
 
-# === 📥 Download Source ===
+# === 📥 Download App Source ===
 echo "📦 Downloading sample app source..."
 gsutil cp -R gs://spls/gsp1201/chat-flask-cloudrun .
 cd chat-flask-cloudrun || exit
@@ -56,11 +49,11 @@ gcloud artifacts repositories create "$AR_REPO" \
   --location="$REGION" \
   --repository-format=Docker || echo "ℹ️ Repo may already exist."
 
-# === 🔐 Auth Docker ===
+# === 🔐 Docker Auth ===
 echo "🔐 Configuring Docker authentication..."
 gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
 
-# === 🛠️ Build Docker Image ===
+# === 🛠️ Build & Push Docker Image ===
 echo "🐳 Building and pushing image to Artifact Registry..."
 gcloud builds submit --tag "$REGION-docker.pkg.dev/$PROJECT_ID/$AR_REPO/$SERVICE_NAME"
 
@@ -77,4 +70,4 @@ gcloud run deploy "$SERVICE_NAME" \
 
 echo ""
 echo "✅ Deployment complete!"
-echo "🌐 Open the service URL shown above to access your app."
+echo "🌐 Visit the service URL shown above to test your app."
