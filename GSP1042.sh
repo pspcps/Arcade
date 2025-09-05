@@ -22,9 +22,4 @@ EOF
 echo " • View B created."
 
 echo "Authorizing views to access the source dataset..."
-
-bq update --source --view "${PARTNER_PROJECT_ID}.${DATASET}.${VIEW_A}" "${PARTNER_PROJECT_ID}:${DATASET}"
-echo " • Authorized View A."
-
-bq update --source --view "${PARTNER_PROJECT_ID}.${DATASET}.${VIEW_B}" "${PARTNER_PROJECT_ID}:${DATASET}"
-echo " • Authorized View B."
+echo "Now Please DO manual step..."
