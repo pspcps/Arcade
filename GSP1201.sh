@@ -15,6 +15,12 @@ if [[ -z "$REGION" ]]; then
 fi
 
 
+# === 🔐 Authenticate Automatically ===
+echo "🔐 Authenticating with gcloud..."
+gcloud auth login --quiet
+
+
+
 
 # === 📁 Project Setup ===
 PROJECT_ID=$(gcloud config get-value project)
