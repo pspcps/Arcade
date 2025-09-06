@@ -194,5 +194,4 @@ predictedgoalProb
 "
 
 
-echo "➡️  Open BigQuery Console to check your datasets: And create function"
-echo "🔗 https://console.cloud.google.com/bigquery"
+echo "Complete Lab"
