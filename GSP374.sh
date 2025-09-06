@@ -90,7 +90,10 @@ ORDER BY
 ShotDistRound0
 "
 
-echo "Please create the function, then press Enter to continue..."
+echo "**********************************************************************************"
+echo "Please create the function, And then press Enter to continue..."
+echo "**********************************************************************************"
+
 read
 
 
