@@ -6,9 +6,19 @@ echo "==== Cloud SQL PostgreSQL Migration Automation ===="
 # --- Collect User Input ---
 read -rp "Enter the GCP region (e.g. us-central1): " REGION
 read -rp "Enter the PostgreSQL Migration Username (e.g. migration_admin): " MIGRATION_USER
+read -rp "Enter the Destination Cloud SQL Instance ID (e.g. migrated-sql-instance): " DST_INSTANCE_ID
+read -rp "Enter the Table name to secure with IAM (e.g. orders): " TABLE_TO_SECURE_WITH_IAM
+read -rp "Enter the IAM User Email (e.g. student123@qwiklabs.net): " IAM_USER_EMAIL
 
 
 
+
+
+### === ENABLE REQUIRED APIS === ###
+echo "Enabling required APIs..."
+gcloud services enable datamigration.googleapis.com \
+    servicenetworking.googleapis.com
+    
 
 # REGION="us-east4"  
 # MIGRATION_USER="migration_user"
@@ -50,25 +60,34 @@ gcloud compute ssh "$POSTGRES_VM_NAME" --zone "$POSTGRES_VM_ZONE" --command "
   sudo systemctl restart postgresql@13-main
 "
 
-cat <<EOF > migration_permissions.sql
--- Create user if not exists
-DO
-\$do\$
-BEGIN
-   IF NOT EXISTS (
-      SELECT FROM pg_catalog.pg_roles WHERE rolname = '$MIGRATION_USER'
-   ) THEN
-      CREATE USER $MIGRATION_USER PASSWORD '$MIGRATION_PASSWORD';
-   END IF;
-END
-\$do\$;
 
-ALTER ROLE $MIGRATION_USER WITH REPLICATION;
-ALTER DATABASE orders OWNER TO $MIGRATION_USER;
 
+# --- Create Migration User and Set Permissions ---
+echo "Generating SQL commands to create migration user and grant privileges..."
+
+cat <<EOF
+----------------Step1---------------
+
+sudo su - postgres
+psql
+\c postgres;
+CREATE EXTENSION pglogical;
 \c orders;
+CREATE EXTENSION pglogical;
 
-CREATE EXTENSION IF NOT EXISTS pglogical;
+
+
+
+----------------Step2---------------
+
+CREATE USER $MIGRATION_USER PASSWORD '$MIGRATION_PASSWORD';
+ALTER DATABASE orders OWNER TO $MIGRATION_USER;
+ALTER ROLE $MIGRATION_USER WITH REPLICATION;
+
+
+ALTER TABLE inventory_items ADD PRIMARY KEY (id);
+
+
 
 GRANT USAGE ON SCHEMA pglogical TO $MIGRATION_USER;
 GRANT ALL ON SCHEMA pglogical TO $MIGRATION_USER;
@@ -85,39 +104,91 @@ GRANT SELECT ON pglogical.replication_set_table TO $MIGRATION_USER;
 GRANT SELECT ON pglogical.sequence_state TO $MIGRATION_USER;
 GRANT SELECT ON pglogical.subscription TO $MIGRATION_USER;
 
+
 GRANT USAGE ON SCHEMA public TO $MIGRATION_USER;
 GRANT ALL ON SCHEMA public TO $MIGRATION_USER;
 GRANT SELECT ON public.distribution_centers TO $MIGRATION_USER;
+GRANT SELECT ON public.inventory_items TO $MIGRATION_USER;
 GRANT SELECT ON public.order_items TO $MIGRATION_USER;
 GRANT SELECT ON public.products TO $MIGRATION_USER;
 GRANT SELECT ON public.users TO $MIGRATION_USER;
-GRANT SELECT ON public.inventory_items TO $MIGRATION_USER;
+
+
 
 ALTER TABLE public.distribution_centers OWNER TO $MIGRATION_USER;
+ALTER TABLE public.inventory_items OWNER TO $MIGRATION_USER;
 ALTER TABLE public.order_items OWNER TO $MIGRATION_USER;
 ALTER TABLE public.products OWNER TO $MIGRATION_USER;
 ALTER TABLE public.users OWNER TO $MIGRATION_USER;
-ALTER TABLE public.inventory_items OWNER TO $MIGRATION_USER;
 
--- Add primary key if missing on the dynamic table
-DO \$do\$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.table_constraints tc
-    WHERE tc.table_name = 'inventory_items' AND tc.constraint_type = 'PRIMARY KEY'
-  ) THEN
-    EXECUTE format('ALTER TABLE public.%I ADD PRIMARY KEY (id)', 'inventory_items');
-  END IF;
-END
-\$do\$;
+
+
+----------------Step3---------------
+
+
+\c postgres;
+
+
+GRANT USAGE ON SCHEMA pglogical TO $MIGRATION_USER;
+GRANT ALL ON SCHEMA pglogical TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.tables TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.depend TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.local_node TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.local_sync_status TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.node TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.node_interface TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.queue TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.replication_set TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.replication_set_seq TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.replication_set_table TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.sequence_state TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.subscription TO $MIGRATION_USER;
+
+
+
+
+---------------------------------------------Step4---------------
+
+
+supersecret!
+
+\c orders
+
+supersecret!
+
+
+ GRANT ALL PRIVILEGES ON TABLE $TABLE_TO_SECURE_WITH_IAM TO "$IAM_USER_EMAIL";
+
+
+ ----------------------------------------------------Step5---------------
+
+supersecret!
+
+\c orders
+
+supersecret!
+
+
+insert into distribution_centers values(-80.1918,25.7617,'Miami FL',11);
+\q
+
+
+
+----------------Step6---------------
+
+gcloud auth login --quiet
+
+gcloud projects get-iam-policy $DEVSHELL_PROJECT_ID
+
+
+gcloud sql instances clone '$DST_INSTANCE_ID'  postgres-orders-pitr --point-in-time ''
+ 
+
+\q
+
+
+
+\$\$;
 EOF
 
-
-echo "Copying migration_permissions.sql to VM..."
-gcloud compute scp migration_permissions.sql "$POSTGRES_VM_NAME":~/ --zone "$POSTGRES_VM_ZONE"
-
-
-echo "Executing migration permissions SQL on VM..."
-gcloud compute ssh "$POSTGRES_VM_NAME" --zone "$POSTGRES_VM_ZONE" --command "
-  sudo -u postgres psql -f migration_permissions.sql
-"
+echo "==== Please copy the above SQL and execute it inside your PostgreSQL psql shell on the source VM ===="
