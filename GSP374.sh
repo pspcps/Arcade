@@ -125,3 +125,6 @@ FROM
 ORDER BY predictedGoalProb
 "
 
+
+echo "➡️  Open BigQuery Console to check your datasets:"
+echo "🔗 https://console.cloud.google.com/bigquery"
