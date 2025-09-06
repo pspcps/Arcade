@@ -61,7 +61,6 @@ gcloud compute ssh "$POSTGRES_VM_NAME" --zone "$POSTGRES_VM_ZONE" --command "
 "
 
 
-
 # --- Create Migration User and Set Permissions ---
 echo "Generating SQL commands to create migration user and grant privileges..."
 
