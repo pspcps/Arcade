@@ -6,6 +6,11 @@ read -rp "Enter your region (e.g., us-central1): " REGION
 # Set project ID
 PROJECT_ID=$DEVSHELL_PROJECT_ID
 
+# Enable Dataflow service
+echo "Enabling Dataflow API..."
+gcloud services enable dataflow.googleapis.com
+
+
 # Create Spanner instance
 echo "Creating Spanner instance: banking-ops-instance"
 gcloud spanner instances create banking-ops-instance \
@@ -86,9 +91,6 @@ VALUES
 echo "Downloading customer data file..."
 curl -LO https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/Customer_List_500.csv
 
-# Enable Dataflow service
-echo "Enabling Dataflow API..."
-gcloud services enable dataflow.googleapis.com
 
 # Create import manifest file
 echo "Creating manifest.json..."
