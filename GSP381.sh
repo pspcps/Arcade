@@ -84,7 +84,7 @@ VALUES
 
 # Download sample CSV file
 echo "Downloading customer data file..."
-curl -LO https://raw.githubusercontent.com/Itsabhishek7py/GoogleCloudSkillsboost/main/Create%20and%20Manage%20Cloud%20Spanner%20Instances%3A%20Challenge%20Lab/Customer_List_500.csv
+curl -LO https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/Customer_List_500.csv
 
 # Enable Dataflow service
 echo "Enabling Dataflow API..."
