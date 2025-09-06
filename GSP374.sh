@@ -126,5 +126,5 @@ ORDER BY predictedGoalProb
 "
 
 
-echo "➡️  Open BigQuery Console to check your datasets:"
+echo "➡️  Open BigQuery Console to check your datasets: And create function"
 echo "🔗 https://console.cloud.google.com/bigquery"
