@@ -66,6 +66,13 @@ echo "Generating SQL commands to create migration user and grant privileges..."
 
 cat <<EOF
 
+
+************************************************************************************************
+**********************************Copy And past in any tool************************************
+**********************************************************************************************
+
+
+
 gcloud compute ssh "$POSTGRES_VM_NAME" \
   --zone="$POSTGRES_VM_ZONE" \
   --quiet
@@ -73,13 +80,17 @@ gcloud compute ssh "$POSTGRES_VM_NAME" \
 ----------------Step1---------------
 
 sudo su - postgres
+
 psql
+
+
 \c postgres;
+
 CREATE EXTENSION pglogical;
+
 \c orders;
+
 CREATE EXTENSION pglogical;
-
-
 
 
 ----------------Step2---------------
@@ -161,8 +172,8 @@ supersecret!
 supersecret!
 
 
- GRANT ALL PRIVILEGES ON TABLE $TABLE_TO_SECURE_WITH_IAM TO "$IAM_USER_EMAIL";
-
+GRANT ALL PRIVILEGES ON TABLE $TABLE_TO_SECURE_WITH_IAM TO "$IAM_USER_EMAIL";
+\q
 
  ----------------------------------------------------Step5---------------
 
