@@ -7,9 +7,16 @@ echo "==== Cloud SQL PostgreSQL Migration Automation ===="
 read -rp "Enter the GCP region (e.g. us-central1): " REGION
 read -rp "Enter the PostgreSQL Migration Username (e.g. migration_admin): " MIGRATION_USER
 read -rp "Enter the Destination Cloud SQL Instance ID (e.g. migrated-sql-instance): " DST_INSTANCE_ID
-read -rp "Enter the IAM User Email (e.g. student123@qwiklabs.net): " IAM_USER_EMAIL
 read -rp "Enter the Table name to secure with IAM (e.g. inventory_items): " TABLE_TO_SECURE_WITH_IAM
 read -rp "Enter Point-in-Time Recovery Retention Days (e.g. 1): " PITR_RETENTION_DAYS
+read -rp "Enter the IAM User Email (e.g. student123@qwiklabs.net): " IAM_USER_EMAIL
+
+# REGION="us-east4"  
+# MIGRATION_USER="migration_user"
+# DST_INSTANCE_ID="postgres14-0ctm7"
+# IAM_USER_EMAIL="student-03-0b10a8155a67@qwiklabs.net"
+# TABLE_TO_SECURE_WITH_IAM="inventory_items"
+# PITR_RETENTION_DAYS="6" 
 
 MIGRATION_PASSWORD="DMS_1s_cool!"
 DST_INSTANCE_PASSWORD="supersecret!"
@@ -48,33 +55,28 @@ gcloud compute ssh "$POSTGRES_VM_NAME" --zone "$POSTGRES_VM_ZONE" --command "
   sudo systemctl restart postgresql@13-main
 "
 
-# --- Create Migration User and Set Permissions ---
-echo "Generating SQL commands to create migration user and grant privileges..."
-
-cat <<EOF
--- Connect to default DB postgres first:
-\\c postgres;
-
--- Create migration user if not exists
-DO \$\$
+cat <<EOF > migration_permissions.sql
+-- Create user if not exists
+DO
+\$do\$
 BEGIN
-  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '$MIGRATION_USER') THEN
-    CREATE USER $MIGRATION_USER PASSWORD '$MIGRATION_PASSWORD';
-  END IF;
+   IF NOT EXISTS (
+      SELECT FROM pg_catalog.pg_roles WHERE rolname = '$MIGRATION_USER'
+   ) THEN
+      CREATE USER $MIGRATION_USER PASSWORD '$MIGRATION_PASSWORD';
+   END IF;
 END
-\$\$;
+\$do\$;
 
 ALTER ROLE $MIGRATION_USER WITH REPLICATION;
 ALTER DATABASE orders OWNER TO $MIGRATION_USER;
 
--- Connect to orders DB for schema grants
-\\c orders;
+\c orders;
 
 CREATE EXTENSION IF NOT EXISTS pglogical;
 
 GRANT USAGE ON SCHEMA pglogical TO $MIGRATION_USER;
 GRANT ALL ON SCHEMA pglogical TO $MIGRATION_USER;
-
 GRANT SELECT ON pglogical.tables TO $MIGRATION_USER;
 GRANT SELECT ON pglogical.depend TO $MIGRATION_USER;
 GRANT SELECT ON pglogical.local_node TO $MIGRATION_USER;
@@ -90,7 +92,6 @@ GRANT SELECT ON pglogical.subscription TO $MIGRATION_USER;
 
 GRANT USAGE ON SCHEMA public TO $MIGRATION_USER;
 GRANT ALL ON SCHEMA public TO $MIGRATION_USER;
-
 GRANT SELECT ON public.distribution_centers TO $MIGRATION_USER;
 GRANT SELECT ON public.order_items TO $MIGRATION_USER;
 GRANT SELECT ON public.products TO $MIGRATION_USER;
@@ -103,24 +104,28 @@ ALTER TABLE public.products OWNER TO $MIGRATION_USER;
 ALTER TABLE public.users OWNER TO $MIGRATION_USER;
 ALTER TABLE public."$TABLE_TO_SECURE_WITH_IAM" OWNER TO $MIGRATION_USER;
 
--- Add primary key on $TABLE_TO_SECURE_WITH_IAM if missing
-DO \$\$
+-- Add primary key if missing on the dynamic table
+DO \$do\$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1
-    FROM information_schema.table_constraints tc
-    JOIN information_schema.key_column_usage kcu
-      ON tc.constraint_name = kcu.constraint_name
-    WHERE tc.table_name = '$TABLE_TO_SECURE_WITH_IAM'
-      AND tc.constraint_type = 'PRIMARY KEY'
+    SELECT 1 FROM information_schema.table_constraints tc
+    WHERE tc.table_name = '$TABLE_TO_SECURE_WITH_IAM' AND tc.constraint_type = 'PRIMARY KEY'
   ) THEN
     EXECUTE format('ALTER TABLE public.%I ADD PRIMARY KEY (id)', '$TABLE_TO_SECURE_WITH_IAM');
   END IF;
 END
-\$\$;
+\$do\$;
 EOF
 
-echo "==== Please copy the above SQL and execute it inside your PostgreSQL psql shell on the source VM ===="
+
+echo "Copying migration_permissions.sql to VM..."
+gcloud compute scp migration_permissions.sql "$POSTGRES_VM_NAME":~/ --zone "$POSTGRES_VM_ZONE"
+
+
+echo "Executing migration permissions SQL on VM..."
+gcloud compute ssh "$POSTGRES_VM_NAME" --zone "$POSTGRES_VM_ZONE" --command "
+  sudo -u postgres psql -f migration_permissions.sql
+"
 
 # --- Create Cloud SQL instance ---
 echo "Creating Cloud SQL instance: $DST_INSTANCE_ID"
