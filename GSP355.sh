@@ -66,6 +66,11 @@ gcloud compute ssh "$POSTGRES_VM_NAME" --zone "$POSTGRES_VM_ZONE" --command "
 echo "Generating SQL commands to create migration user and grant privileges..."
 
 cat <<EOF
+
+gcloud compute ssh "$POSTGRES_VM_NAME" \
+  --zone="$POSTGRES_VM_ZONE" \
+  --quiet
+
 ----------------Step1---------------
 
 sudo su - postgres
@@ -192,3 +197,5 @@ gcloud sql instances clone '$DST_INSTANCE_ID'  postgres-orders-pitr --point-in-t
 EOF
 
 echo "==== Please copy the above SQL and execute it inside your PostgreSQL psql shell on the source VM ===="
+
+
