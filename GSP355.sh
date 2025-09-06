@@ -12,13 +12,13 @@ read -rp "Enter the Destination Cloud SQL Instance ID (e.g. migrated-sql-instanc
 # read -rsp "Enter the Password for the Cloud SQL postgres user (e.g. supersecret!): " DST_INSTANCE_PASSWORD; echo
 
 read -rp "Enter the IAM User Email (e.g. student123@qwiklabs.net): " IAM_USER_EMAIL
-# read -rp "Enter the Table name to secure with IAM (e.g. orders): " TABLE_TO_SECURE_WITH_IAM
+read -rp "Enter the Table name to secure with IAM (e.g. orders): " TABLE_TO_SECURE_WITH_IAM
 read -rp "Enter Point-in-Time Recovery Retention Days (e.g. 1): " PITR_RETENTION_DAYS
 
 POSTGRES_VM_NAME="postgres-vm"
 DST_INSTANCE_PASSWORD= "supersecret!"
 MIGRATION_PASSWORD = "DMS_1s_cool!"
-TABLE_TO_SECURE_WITH_IAM = "orders"
+# TABLE_TO_SECURE_WITH_IAM = "orders"
 PROJECT_ID=$(gcloud config get-value project)
 echo "Using GCP Project: $PROJECT_ID"
 
