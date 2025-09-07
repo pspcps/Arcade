@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Form Identifier</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 30px; }
+    input[type="text"] { width: 100%; padding: 8px; margin: 5px 0; }
+    button { padding: 10px 20px; margin-top: 10px; }
+    #result { margin-top: 20px; font-weight: bold; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+
+  <h2>🎯 Identify Your Lab Form</h2>
+  <p>Enter the 4 tasks from your lab below:</p>
+
+  <input type="text" id="task1" placeholder="Task 1"><br>
+  <input type="text" id="task2" placeholder="Task 2"><br>
+  <input type="text" id="task3" placeholder="Task 3"><br>
+  <input type="text" id="task4" placeholder="Task 4"><br>
+
+  <button onclick="checkForm()">Check Form</button>
+
+  <div id="result"></div>
+
+  <script>
+    const forms = {
+      "Form 1": [
+        "Create a Cloud Storage bucket",
+        "Create a lake in Dataplex and add a zone to your lake",
+        "Create an entry group",
+        "Create a tag template (Storage bucket)"
+      ],
+      "Form 2": [
+        "Create a lake in Dataplex and add a zone to your lake",
+        "Create an entry group",
+        "Attach an existing Cloud Storage bucket to the zone",
+        "Create a tag template (Storage bucket)"
+      ],
+      "Form 3": [
+        "Create a BigQuery dataset",
+        "Add a zone to your lake",
+        "Attach an existing BigQuery Dataset to the Lake",
+        "Create a tag template (BigQuery Dataset)"
+      ],
+      "Form 4": [
+        "Create a lake in Dataplex and add a zone to your lake",
+        "Attach an existing Cloud Storage bucket to the zone",
+        "Attach an existing BigQuery Dataset to the Lake",
+        "Create Entities"
+      ]
+    };
+
+    function normalize(text) {
+      return text.trim().toLowerCase().replace(/\s+/g, " ");
+    }
+
+    function checkForm() {
+      const userTasks = [
+        normalize(document.getElementById("task1").value),
+        normalize(document.getElementById("task2").value),
+        normalize(document.getElementById("task3").value),
+        normalize(document.getElementById("task4").value),
+      ];
+
+      let result = "❌ No matching form found.";
+
+      for (const [formName, tasks] of Object.entries(forms)) {
+        const normalizedTasks = tasks.map(normalize);
+        const isMatch = userTasks.every(task => normalizedTasks.includes(task));
+        if (isMatch) {
+          result = `✅ You are likely using <strong>${formName}</strong>`;
+          break;
+        }
+      }
+
+      document.getElementById("result").innerHTML = result;
+    }
+  </script>
+
+</body>
+</html>
