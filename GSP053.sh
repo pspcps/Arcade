@@ -91,14 +91,22 @@ kubectl create -f deployments/fortune-app-canary.yaml
 kubectl get deployments
 
 echo "📈 Verifying canary traffic distribution..."
-for i in {1..10}; do curl -s http://$EXTERNAL_IP/version; echo; done
+curl -s http://$EXTERNAL_IP/version;
+curl -s http://$EXTERNAL_IP/version;
+curl -s http://$EXTERNAL_IP/version;
+curl -s http://$EXTERNAL_IP/version;
+curl -s http://$EXTERNAL_IP/version;
+curl -s http://$EXTERNAL_IP/version;
+curl -s http://$EXTERNAL_IP/version;
+curl -s http://$EXTERNAL_IP/version;
+
 
 # 🚦 Ask for confirmation before proceeding
-read -p "✅ Do you want to continue to Blue-Green deployment? (y/n): " CONFIRM
-if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then
-    echo "🛑 Stopping script as per user request."
-    exit 0
-fi
+read -p "✅ Please Check progress till Blue-Green deployment?: " CONFIRM
+# if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then
+#     echo "🛑 Stopping script as per user request."
+#     exit 0
+# fi
 
 echo "💙 Creating green deployment..."
 kubectl apply -f services/fortune-app-blue-service.yaml
