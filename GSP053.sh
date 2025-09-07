@@ -141,11 +141,8 @@ for i in {1..10}; do
 done
 
 ### Confirmation Before Blue-Green
-read -p "✅ Ready to continue to Blue-Green deployment? (y/n): " CONFIRM
-if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then
-    echo "🛑 Exiting as per user request."
-    exit 0
-fi
+read -p "✅ continue to Blue-Green deployment" CONFIRM
+
 
 ### Blue-Green Deployment
 echo "💙 Applying blue service..."
