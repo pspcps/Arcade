@@ -143,25 +143,3 @@ done
 ### Confirmation Before Blue-Green
 read -p "✅ continue to Blue-Green deployment" CONFIRM
 
-
-### Blue-Green Deployment
-echo "💙 Applying blue service..."
-kubectl apply -f services/fortune-app-blue-service.yaml
-
-echo "💚 Deploying green version..."
-kubectl apply -f deployments/fortune-app-green.yaml
-
-echo "✅ Verifying current version (should be 1.0.0):"
-curl -s "$SERVICE_URL"
-
-echo "🔁 Switching service to green version..."
-kubectl apply -f services/fortune-app-green-service.yaml
-sleep 10
-curl -s "$SERVICE_URL"
-
-echo "🔙 Rolling back to blue version..."
-kubectl apply -f services/fortune-app-blue-service.yaml
-sleep 10
-curl -s "$SERVICE_URL"
-
-echo "🎉 All tasks completed successfully!"
