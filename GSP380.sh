@@ -89,8 +89,13 @@ echo
 echo -e "\033[1;33mCheck job status\033[0m \033[1;34mhttps://console.cloud.google.com/dataflow/jobs?referrer=search&inv=1&invt=AbzGZg&project=$DEVSHELL_PROJECT_ID\033[0m"
 echo
 
+
+echo
+echo -e "\033[1;33mCheck job status\033[0m \033[1;34mhttps://console.cloud.google.com/dataflow/jobs?referrer=search&inv=1&invt=AbzGZg&project=$DEVSHELL_PROJECT_ID\033[0m"
+echo
+
 while true; do
-    echo -ne "\e[1;93mDo you Want to proceed? (Y/n): \e[0m"
+    echo -ne "\e[1;93mDo you Want to proceed For Deleting Tables. Make sure you check all progess till delete step? (Y/n): \e[0m"
     read confirm
     case "$confirm" in
         [Yy]) 
