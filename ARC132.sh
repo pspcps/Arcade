@@ -4,22 +4,23 @@
 
 echo "Please enter the following values correctly:"
 
+
 read -p "Enter your Google Cloud API Key: " API_KEY
+export API_KEY
 
-export API_KEY=""
+read -p "Enter filename for Text-to-Speech output (e.g., synthesize-text.txt): " text_to_speech_output_file
 
-text_to_speech_output_file=""  
+read -p "Enter filename for Speech-to-Text request file (e.g., speech-request.json): " speech_to_text_request_file
+read -p "Enter filename for Speech-to-Text response file (e.g., speech-response.json): " speech_to_text_response_file
 
-speech_to_text_request_file=""  
-speech_to_text_response_file="" 
+read -p "Enter sentence to translate (e.g., こんにちは): " translation_input_sentence
+read -p "Enter filename for translation output file (e.g., translated-text.json): " translation_output_file
 
-translation_input_sentence=""  
-translation_output_file=""     
+read -p "Enter sentence for language detection: " language_detect_input_sentence
+read -p "Enter filename for language detection output file (e.g., detect-language.json): " language_detect_output_file
 
-language_detect_input_sentence=""  
-language_detect_output_file=""     
+export PROJECT_ID=$(gcloud config get-value project) 
 
-export PROJECT_ID=$(gcloud config get-value project)
 
 source venv/bin/activate
 
