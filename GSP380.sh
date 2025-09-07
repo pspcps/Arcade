@@ -1,143 +1,121 @@
-#!/bin/bash
 
-# Prompt user for input zone
-read -p "Enter the GCP Zone (e.g. us-central1-a): " ZONE
-export ZONE
-export REGION="${ZONE%-*}"
+
+gcloud auth list
+
+export ZONE=$(gcloud compute project-info describe --format="value(commonInstanceMetadata.items[google-compute-default-zone])")
+
+export REGION=$(gcloud compute project-info describe --format="value(commonInstanceMetadata.items[google-compute-default-region])")
+
+gcloud services disable dataflow.googleapis.com --project $DEVSHELL_PROJECT_ID
+
 export PROJECT_ID=$(gcloud config get-value project)
-export DEVSHELL_PROJECT_ID=$PROJECT_ID
 
-# Set config
 gcloud config set compute/zone "$ZONE"
+
 gcloud config set compute/region "$REGION"
 
-# Re-enable Dataflow API to ensure clean state
-gcloud services disable dataflow.googleapis.com --project $PROJECT_ID
-gcloud services enable dataflow.googleapis.com --project $PROJECT_ID
+gcloud services enable dataflow.googleapis.com --project $DEVSHELL_PROJECT_ID
 
-echo "Creating Bigtable instance..."
-
-# Create Bigtable instance with autoscaling
-gcloud bigtable instances create ecommerce-recommendations \
-  --cluster=ecommerce-recommendations-c1 \
-  --cluster-zone=$ZONE \
-  --cluster-storage-type=ssd \
-  --autoscaling-min-nodes=1 \
-  --autoscaling-max-nodes=5 \
-  --autoscaling-cpu-target=60 \
-  --display-name="ecommerce-recommendations"
-
-# Create a bucket
-echo "Creating Cloud Storage bucket..."
-gsutil mb -l $REGION gs://$PROJECT_ID
-
-# Create SessionHistory table
-echo "Creating Bigtable table: SessionHistory"
-gcloud bigtable instances tables create SessionHistory \
-  --instance=ecommerce-recommendations \
-  --column-families=Engagements,Sales
-
-# Load data into SessionHistory via Dataflow
-echo "Launching Dataflow job: import-sessions"
+echo
+echo -e "\033[1;33mCreate Bigtable instance\033[0m \033[1;34mhttps://console.cloud.google.com/bigtable/create-instance?inv=1&invt=AbzGZg&project=$DEVSHELL_PROJECT_ID\033[0m"
+echo
 
 while true; do
-  gcloud dataflow jobs run import-sessions \
-    --region=$REGION \
-    --project=$PROJECT_ID \
-    --gcs-location gs://dataflow-templates-$REGION/latest/GCS_SequenceFile_to_Cloud_Bigtable \
-    --staging-location gs://$PROJECT_ID/temp \
-    --parameters bigtableProject=$PROJECT_ID,bigtableInstanceId=ecommerce-recommendations,bigtableTableId=SessionHistory,sourcePattern=gs://cloud-training/OCBL377/retail-engagements-sales-00000-of-00001,mutationThrottleLatencyMs=0
-
-  if [ $? -eq 0 ]; then
-    echo "Job import-sessions submitted successfully. Monitor in the console."
-    break
-  else
-    echo "Job failed, retrying in 10 seconds..."
-    sleep 10
-  fi
+    echo -ne "\e[1;93mDo you Want to proceed? (Y/n): \e[0m"
+    read confirm
+    case "$confirm" in
+        [Yy]) 
+            echo -e "\e[34mRunning the command...\e[0m"
+            break
+            ;;
+        [Nn]|"") 
+            echo "Operation canceled."
+            break
+            ;;
+        *) 
+            echo -e "\e[31mInvalid input. Please enter Y or N.\e[0m" 
+            ;;
+    esac
 done
 
-# Create PersonalizedProducts table
-echo "Creating Bigtable table: PersonalizedProducts"
-gcloud bigtable instances tables create PersonalizedProducts \
-  --instance=ecommerce-recommendations \
-  --column-families=Recommendations
+gsutil mb gs://$PROJECT_ID
 
-# Load data into PersonalizedProducts via Dataflow
-echo "Launching Dataflow job: import-recommendations"
+export PROJECT_ID=$(gcloud config get-value project)
+
+gcloud bigtable instances tables create SessionHistory --instance=ecommerce-recommendations --project=$PROJECT_ID --column-families=Engagements,Sales
+
+sleep 20
+
+#!/bin/bash
 
 while true; do
-  gcloud dataflow jobs run import-recommendations \
-    --region=$REGION \
-    --project=$PROJECT_ID \
-    --gcs-location gs://dataflow-templates-$REGION/latest/GCS_SequenceFile_to_Cloud_Bigtable \
-    --staging-location gs://$PROJECT_ID/temp \
-    --parameters bigtableProject=$PROJECT_ID,bigtableInstanceId=ecommerce-recommendations,bigtableTableId=PersonalizedProducts,sourcePattern=gs://cloud-training/OCBL377/retail-recommendations-00000-of-00001,mutationThrottleLatencyMs=0
+    gcloud dataflow jobs run import-sessions --region=$REGION --project=$PROJECT_ID --gcs-location gs://dataflow-templates-$REGION/latest/GCS_SequenceFile_to_Cloud_Bigtable --staging-location gs://$PROJECT_ID/temp --parameters bigtableProject=$PROJECT_ID,bigtableInstanceId=ecommerce-recommendations,bigtableTableId=SessionHistory,sourcePattern=gs://cloud-training/OCBL377/retail-engagements-sales-00000-of-00001,mutationThrottleLatencyMs=0
 
-  if [ $? -eq 0 ]; then
-    echo "Job import-recommendations submitted successfully."
-    break
-  else
-    echo "Job failed, retrying in 10 seconds..."
-    sleep 10
-  fi
+    if [ $? -eq 0 ]; then
+        echo -e "\033[1;33mJob has completed successfully. now just wait for succeeded"
+        break
+    else
+        echo -e "\033[1;33mJob retrying."
+        sleep 10
+    fi
 done
 
-# Add replication: create a second cluster
-SECOND_ZONE="${ZONE/a/b}"  # If zone is a, switch to b
-echo "Creating replication cluster in zone $SECOND_ZONE"
 
-gcloud bigtable clusters create ecommerce-recommendations-c2 \
+gcloud bigtable instances tables create PersonalizedProducts --project=$PROJECT_ID --instance=ecommerce-recommendations --column-families=Recommendations
+
+sleep 20
+
+#!/bin/bash
+
+while true; do
+    gcloud dataflow jobs run import-recommendations --region=$REGION --project=$PROJECT_ID --gcs-location gs://dataflow-templates-$REGION/latest/GCS_SequenceFile_to_Cloud_Bigtable --staging-location gs://$PROJECT_ID/temp --parameters bigtableProject=$PROJECT_ID,bigtableInstanceId=ecommerce-recommendations,bigtableTableId=PersonalizedProducts,sourcePattern=gs://cloud-training/OCBL377/retail-recommendations-00000-of-00001,mutationThrottleLatencyMs=0
+
+    if [ $? -eq 0 ]; then
+        echo -e "\033[1;33mJob has completed successfully."
+        break
+    else
+        echo -e "\033[1;33mJob retrying."
+        sleep 10
+    fi
+done
+
+
+gcloud beta bigtable backups create PersonalizedProducts_7 --instance=ecommerce-recommendations --cluster=ecommerce-recommendations-c1 --table=PersonalizedProducts --retention-period=7d 
+
+
+gcloud beta bigtable instances tables restore --source=projects/$PROJECT_ID/instances/ecommerce-recommendations/clusters/ecommerce-recommendations-c1/backups/PersonalizedProducts_7 --async --destination=PersonalizedProducts_7_restored --destination-instance=ecommerce-recommendations --project=$PROJECT_ID
+
+echo
+echo -e "\033[1;33mCheck job status\033[0m \033[1;34mhttps://console.cloud.google.com/dataflow/jobs?referrer=search&inv=1&invt=AbzGZg&project=$DEVSHELL_PROJECT_ID\033[0m"
+echo
+
+while true; do
+    echo -ne "\e[1;93mDo you Want to proceed? (Y/n): \e[0m"
+    read confirm
+    case "$confirm" in
+        [Yy]) 
+            echo -e "\e[34mRunning the command...\e[0m"
+            break
+            ;;
+        [Nn]|"") 
+            echo "Operation canceled."
+            break
+            ;;
+        *) 
+            echo -e "\e[31mInvalid input. Please enter Y or N.\e[0m" 
+            ;;
+    esac
+done
+
+
+gcloud bigtable instances tables delete PersonalizedProducts --instance=ecommerce-recommendations --quiet
+
+gcloud bigtable instances tables delete PersonalizedProducts_7_restored --instance=ecommerce-recommendations --quiet
+
+gcloud bigtable instances tables delete SessionHistory --instance=ecommerce-recommendations --quiet
+
+gcloud bigtable backups delete PersonalizedProducts_7 \
   --instance=ecommerce-recommendations \
-  --zone=$SECOND_ZONE \
-  --autoscaling-min-nodes=1 \
-  --autoscaling-max-nodes=5 \
-  --autoscaling-cpu-target=60 \
-  --storage-type=ssd
+  --cluster=ecommerce-recommendations-c1 --quiet
 
-# Backup the PersonalizedProducts table
-echo "Creating backup: PersonalizedProducts_7"
-
-gcloud beta bigtable backups create PersonalizedProducts_7 \
-  --instance=ecommerce-recommendations \
-  --cluster=ecommerce-recommendations-c1 \
-  --table=PersonalizedProducts \
-  --retention-period=7d
-
-# Restore the backup
-echo "Restoring backup as table: PersonalizedProducts_7_restored"
-
-gcloud beta bigtable instances tables restore \
-  --source=projects/$PROJECT_ID/instances/ecommerce-recommendations/clusters/ecommerce-recommendations-c1/backups/PersonalizedProducts_7 \
-  --destination=PersonalizedProducts_7_restored \
-  --destination-instance=ecommerce-recommendations \
-  --project=$PROJECT_ID \
-  --async
-
-# Wait for user confirmation before cleanup
-read -p "Do you want to delete the tables and backup to clean up resources? (Y/n): " CONFIRM
-if [[ "$CONFIRM" =~ ^[Yy]$ || -z "$CONFIRM" ]]; then
-  echo "Deleting Bigtable tables and backup..."
-
-  gcloud bigtable instances tables delete PersonalizedProducts \
-    --instance=ecommerce-recommendations --quiet
-
-  gcloud bigtable instances tables delete PersonalizedProducts_7_restored \
-    --instance=ecommerce-recommendations --quiet
-
-  gcloud bigtable instances tables delete SessionHistory \
-    --instance=ecommerce-recommendations --quiet
-
-  gcloud bigtable backups delete PersonalizedProducts_7 \
-    --instance=ecommerce-recommendations \
-    --cluster=ecommerce-recommendations-c1 --quiet
-
-  # Optional: delete instance
-  # gcloud bigtable instances delete ecommerce-recommendations --quiet
-
-  echo "Cleanup complete."
-else
-  echo "Skipping cleanup."
-fi
-
-echo "All tasks completed."
+# gcloud bigtable instances delete ecommerce-recommendations --quiet
