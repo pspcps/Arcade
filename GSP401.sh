@@ -11,6 +11,7 @@ JOB_NAME="cron-job"
 MESSAGE_BODY="hello cron!"
 SCHEDULE="* * * * *"
 TIMEZONE="Etc/UTC"  # Change if needed
+LOCATION=""         # Will be set interactively if needed
 
 # -------------------------------
 # Functions
@@ -48,17 +49,37 @@ function create_subscription_if_not_exists() {
     fi
 }
 
-function create_scheduler_job_if_not_exists() {
-    if gcloud scheduler jobs describe "$JOB_NAME" &>/dev/null; then
-        log "Scheduler job '$JOB_NAME' already exists."
+function prompt_for_location() {
+    local current_location
+    current_location=$(gcloud config get-value scheduler/location 2>/dev/null || echo "")
+
+    if [[ -n "$current_location" ]]; then
+        LOCATION="$current_location"
+        log "Using Cloud Scheduler location from gcloud config: $LOCATION"
     else
-        log "Creating Cloud Scheduler job '$JOB_NAME'..."
+        echo -e "\n⚠️  Cloud Scheduler requires a location (e.g., us-central1, europe-west1, etc.)"
+        read -rp "Enter your desired Cloud Scheduler location: " LOCATION
+        if [[ -z "$LOCATION" ]]; then
+            echo "❌ Location is required to create a Scheduler job. Exiting."
+            exit 1
+        fi
+        # Optionally set location in config so it's remembered
+        gcloud config set scheduler/location "$LOCATION"
+    fi
+}
+
+function create_scheduler_job_if_not_exists() {
+    if gcloud scheduler jobs describe "$JOB_NAME" --location="$LOCATION" &>/dev/null; then
+        log "Scheduler job '$JOB_NAME' already exists in location '$LOCATION'."
+    else
+        log "Creating Cloud Scheduler job '$JOB_NAME' in location '$LOCATION'..."
         gcloud scheduler jobs create pubsub "$JOB_NAME" \
             --schedule="$SCHEDULE" \
             --time-zone="$TIMEZONE" \
             --topic="$TOPIC_NAME" \
             --message-body="$MESSAGE_BODY" \
-            --description="Send message to Pub/Sub every minute"
+            --description="Send message to Pub/Sub every minute" \
+            --location="$LOCATION"
     fi
 }
 
@@ -67,7 +88,7 @@ function pull_pubsub_messages() {
     sleep 70
 
     log "Pulling messages from Pub/Sub subscription '$SUBSCRIPTION_NAME'..."
-    gcloud pubsub subscriptions pull "$SUBSCRIPTION_NAME" --limit=5 --auto-ack || log "No messages available yet. Try again later."
+    gcloud pubsub subscriptions pull "$SUBSCRIPTION_NAME" --limit=5 --auto-ack || log "No messages yet. Run the script again or wait another minute."
 }
 
 # -------------------------------
@@ -82,10 +103,13 @@ log "Step 2: Set up Cloud Pub/Sub"
 create_topic_if_not_exists
 create_subscription_if_not_exists
 
-log "Step 3: Create Cloud Scheduler Job"
+log "Step 3: Set Scheduler location"
+prompt_for_location
+
+log "Step 4: Create Cloud Scheduler Job"
 create_scheduler_job_if_not_exists
 
-log "Step 4: Verify messages from Pub/Sub"
+log "Step 5: Verify messages from Pub/Sub"
 pull_pubsub_messages
 
 
