@@ -147,7 +147,7 @@ has_findings() {
 }
 
 # Retry for up to 15 minutes (9 attempts every 100 seconds)
-MAX_ATTEMPTS=3
+MAX_ATTEMPTS=7
 attempt=1
 
 echo "🔍 Checking for findings in BigQuery..."
