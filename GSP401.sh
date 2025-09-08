@@ -10,8 +10,8 @@ SUBSCRIPTION_NAME="cron-sub"
 JOB_NAME="cron-job"
 MESSAGE_BODY="hello cron!"
 SCHEDULE="* * * * *"
-TIMEZONE="Etc/UTC"  # Change if needed
-LOCATION=""         # Will be set interactively if needed
+TIMEZONE="Etc/UTC"
+LOCATION=""  # Will be asked from user
 
 # -------------------------------
 # Functions
@@ -50,21 +50,11 @@ function create_subscription_if_not_exists() {
 }
 
 function prompt_for_location() {
-    local current_location
-    current_location=$(gcloud config get-value scheduler/location 2>/dev/null || echo "")
-
-    if [[ -n "$current_location" ]]; then
-        LOCATION="$current_location"
-        log "Using Cloud Scheduler location from gcloud config: $LOCATION"
-    else
-        echo -e "\n⚠️  Cloud Scheduler requires a location (e.g., us-central1, europe-west1, etc.)"
-        read -rp "Enter your desired Cloud Scheduler location: " LOCATION
-        if [[ -z "$LOCATION" ]]; then
-            echo "❌ Location is required to create a Scheduler job. Exiting."
-            exit 1
-        fi
-        # Optionally set location in config so it's remembered
-        gcloud config set scheduler/location "$LOCATION"
+    echo -e "\n⚠️  Cloud Scheduler requires a location (e.g., us-central1, us-east1, europe-west1)"
+    read -rp "Enter your desired Cloud Scheduler location: " LOCATION
+    if [[ -z "$LOCATION" ]]; then
+        echo "❌ Location is required. Exiting."
+        exit 1
     fi
 }
 
@@ -88,7 +78,7 @@ function pull_pubsub_messages() {
     sleep 70
 
     log "Pulling messages from Pub/Sub subscription '$SUBSCRIPTION_NAME'..."
-    gcloud pubsub subscriptions pull "$SUBSCRIPTION_NAME" --limit=5 --auto-ack || log "No messages yet. Run the script again or wait another minute."
+    gcloud pubsub subscriptions pull "$SUBSCRIPTION_NAME" --limit=5 --auto-ack || log "No messages yet. Try again later."
 }
 
 # -------------------------------
@@ -103,15 +93,17 @@ log "Step 2: Set up Cloud Pub/Sub"
 create_topic_if_not_exists
 create_subscription_if_not_exists
 
-log "Step 3: Set Scheduler location"
-prompt_for_location
+# log "Step 3: Prompt for Scheduler location"
+# prompt_for_location
 
-log "Step 4: Create Cloud Scheduler Job"
-create_scheduler_job_if_not_exists
+# log "Step 4: Create Cloud Scheduler Job"
+# create_scheduler_job_if_not_exists
 
-log "Step 5: Verify messages from Pub/Sub"
-pull_pubsub_messages
+# log "Step 5: Verify messages from Pub/Sub"
+# pull_pubsub_messages
 
+# log "Step 6: Test your knowledge"
+# echo -e "\nQ: You can trigger an App Engine app, send a message via Cloud Pub/Sub, or hit an arbitrary HTTP endpoint running on Compute Engine, Google Kubernetes Engine, or on-premises with your Cloud Scheduler job."
+# echo "A: True ✅"
 
-
-log "✅ All steps completed successfully and safely re-runnable!"
+# log "✅ All steps completed successfully and safely re-runnable!"
