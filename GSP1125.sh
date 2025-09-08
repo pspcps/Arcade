@@ -1,53 +1,20 @@
 #!/bin/bash
-# Define color variables
 
-BLACK=`tput setaf 0`
-RED=`tput setaf 1`
-GREEN=`tput setaf 2`
-YELLOW=`tput setaf 3`
-BLUE=`tput setaf 4`
-MAGENTA=`tput setaf 5`
-CYAN=`tput setaf 6`
-WHITE=`tput setaf 7`
-
-BG_BLACK=`tput setab 0`
-BG_RED=`tput setab 1`
-BG_GREEN=`tput setab 2`
-BG_YELLOW=`tput setab 3`
-BG_BLUE=`tput setab 4`
-BG_MAGENTA=`tput setab 5`
-BG_CYAN=`tput setab 6`
-BG_WHITE=`tput setab 7`
-
-BOLD=`tput bold`
-RESET=`tput sgr0`
-
-# Array of color codes excluding black and white
-TEXT_COLORS=($RED $GREEN $YELLOW $BLUE $MAGENTA $CYAN)
-BG_COLORS=($BG_RED $BG_GREEN $BG_YELLOW $BG_BLUE $BG_MAGENTA $BG_CYAN)
-
-# Pick random colors
-RANDOM_TEXT_COLOR=${TEXT_COLORS[$RANDOM % ${#TEXT_COLORS[@]}]}
-RANDOM_BG_COLOR=${BG_COLORS[$RANDOM % ${#BG_COLORS[@]}]}
-
-
-echo "${RANDOM_BG_COLOR}${RANDOM_TEXT_COLOR}${BOLD}Starting Execution${RESET}"
-
-# Step 1: Get Compute Zone & Region
-echo "${YELLOW}${BOLD}Fetching Compute Zone & Region...${RESET}"
+# Get zone and region
+echo "Getting compute zone and region..."
 export ZONE=$(gcloud compute project-info describe \
 --format="value(commonInstanceMetadata.items[google-compute-default-zone])")
 
 export REGION=$(gcloud compute project-info describe \
 --format="value(commonInstanceMetadata.items[google-compute-default-region])")
 
-# Step 2: Get IAM Policy and Save to JSON
-echo "${BLUE}${BOLD}Retrieving IAM Policy...${RESET}"
+# Save IAM policy to JSON
+echo "Getting IAM policy..."
 gcloud projects get-iam-policy $(gcloud config get-value project) \
     --format=json > policy.json
 
-# Step 3: Update IAM Policy
-echo "${GREEN}${BOLD}Updating IAM Policy...${RESET}"
+# Modify IAM policy
+echo "Updating IAM policy..."
 jq '{ 
   "auditConfigs": [ 
     { 
@@ -61,36 +28,36 @@ jq '{
   ] 
 } + .' policy.json > updated_policy.json
 
-# Step 4: Set Updated IAM Policy
-echo "${RED}${BOLD}Applying Updated IAM Policy...${RESET}"
+# Apply updated IAM policy
+echo "Applying IAM policy..."
 gcloud projects set-iam-policy $(gcloud config get-value project) updated_policy.json
 
-# Step 5: Enable Security Center API
-echo "${CYAN}${BOLD}Enabling Security Center API...${RESET}"
+# Enable Security Center API
+echo "Enabling Security Center API..."
 gcloud services enable securitycenter.googleapis.com --project=$DEVSHELL_PROJECT_ID
 
-# Step 6: Wait for 20 seconds
-echo "${YELLOW}${BOLD}Waiting for API to be enabled...${RESET}"
+# Wait for API to activate
+echo "Waiting 20 seconds..."
 sleep 20
 
-# Step 7: Add IAM Binding for BigQuery Admin
-echo "${MAGENTA}${BOLD}Granting BigQuery Admin Role...${RESET}"
+# Grant BigQuery Admin role
+echo "Granting BigQuery Admin role..."
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID \
 --member=user:demouser1@gmail.com --role=roles/bigquery.admin
 
-# Step 8: Remove IAM Binding for BigQuery Admin
-echo "${BLUE}${BOLD}Revoking BigQuery Admin Role...${RESET}"
+# Revoke BigQuery Admin role
+echo "Revoking BigQuery Admin role..."
 gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID \
 --member=user:demouser1@gmail.com --role=roles/bigquery.admin
 
-# Step 9: Add IAM Binding for IAM Admin
-echo "${GREEN}${BOLD}Granting IAM Admin Role...${RESET}"
+# Grant IAM Admin role to user
+echo "Granting IAM Admin role..."
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID \
   --member=user:$USER_EMAIL \
   --role=roles/cloudresourcemanager.projectIamAdmin 2>/dev/null
 
-# Step 10: Create Compute Instance
-echo "${BLUE}${BOLD}Creating Compute Instance...${RESET}"
+# Create VM instance
+echo "Creating VM instance..."
 gcloud compute instances create instance-1 \
 --zone=$ZONE \
 --machine-type=e2-medium \
@@ -98,45 +65,38 @@ gcloud compute instances create instance-1 \
 --metadata=enable-oslogin=true --maintenance-policy=MIGRATE --provisioning-model=STANDARD \
 --scopes=https://www.googleapis.com/auth/cloud-platform --create-disk=auto-delete=yes,boot=yes,device-name=instance-1,image=projects/debian-cloud/global/images/debian-11-bullseye-v20230912,mode=rw,size=10,type=projects/$DEVSHELL_PROJECT_ID/zones/$ZONE/diskTypes/pd-balanced
 
-# Step 11: Create DNS Policy
-echo "${CYAN}${BOLD}Creating DNS Policy...${RESET}"
+# Create DNS policy
+echo "Creating DNS policy..."
 gcloud dns --project=$DEVSHELL_PROJECT_ID policies create dns-test-policy --description="quickgcplab" --networks="default" --private-alternative-name-servers="" --no-enable-inbound-forwarding --enable-logging
 
-# Step 12: Wait for 30 seconds
-echo "${YELLOW}${BOLD}Waiting for DNS Policy to take effect...${RESET}"
+# Wait for DNS policy to apply
+echo "Waiting 30 seconds..."
 sleep 30
 
-# Step 13: SSH into Compute Instance and Execute Commands
-echo "${MAGENTA}${BOLD}Connecting to Compute Instance...${RESET}"
+# SSH into VM and run commands
+echo "Connecting to VM and running commands..."
 gcloud compute ssh instance-1 --zone=$ZONE --tunnel-through-iap --project "$DEVSHELL_PROJECT_ID" --quiet --command "gcloud projects get-iam-policy \$(gcloud config get project) && curl etd-malware-trigger.goog"
 
-# Function to prompt user to check their progress
+# Prompt user to confirm progress
 function check_progress {
     while true; do
         echo
-        echo -n "${BOLD}${YELLOW}Have you checked your progress for Task 1 & Task 2? (Y/N): ${RESET}"
-        read -r user_input
+        read -p "Have you checked your progress for Task 1 & Task 2 before deleting instance? (Y/N): " user_input
         if [[ "$user_input" == "Y" || "$user_input" == "y" ]]; then
-            echo
-            echo "${BOLD}${GREEN}Great! Proceeding to the next steps...${RESET}"
-            echo
+            echo "Continuing to next steps..."
             break
         elif [[ "$user_input" == "N" || "$user_input" == "n" ]]; then
-            echo
-            echo "${BOLD}${RED}Please check your progress for Task 1 & Task 2 and then press Y to continue.${RESET}"
+            echo "Please check your progress, then type Y to continue."
         else
-            echo
-            echo "${BOLD}${MAGENTA}Invalid input. Please enter Y or N.${RESET}"
+            echo "Invalid input. Please enter Y or N."
         fi
     done
 }
 
-# Call function to check progress before proceeding
 check_progress
 
-# Step 14: Delete Compute Instance
-echo "${BLUE}${BOLD}Deleting Compute Instance...${RESET}"
+# Delete VM
+echo "Deleting VM..."
 gcloud compute instances delete instance-1 --zone=$ZONE --quiet
 
-echo
-
+echo "Done."
