@@ -57,11 +57,11 @@ for blob in bucket.list_blobs():
         txt_blob.upload_from_string(desc, content_type='text/plain')
 
         # Translate if not 'ja'
-        if locale != 'ja':
-            translation = translate_client.translate(desc, target_language='ja')
-            translated_text = translation['translatedText']
-        else:
+        if locale == 'en':
             translated_text = desc
+        else:
+            translation = translate_client.translate(desc, target_language='en')
+            translated_text = translation['translatedText']
 
         # Append row
         rows_for_bq.append((desc, locale, translated_text, blob.name))
