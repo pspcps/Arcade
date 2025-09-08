@@ -88,8 +88,6 @@ create_scheduler_job_if_not_exists
 log "Step 4: Verify messages from Pub/Sub"
 pull_pubsub_messages
 
-log "Step 5: Test your knowledge"
-echo -e "\nQ: You can trigger an App Engine app, send a message via Cloud Pub/Sub, or hit an arbitrary HTTP endpoint running on Compute Engine, Google Kubernetes Engine, or on-premises with your Cloud Scheduler job."
-echo "A: True ✅"
+
 
 log "✅ All steps completed successfully and safely re-runnable!"
