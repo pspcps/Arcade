@@ -49,7 +49,7 @@ echo ""
 
 # Download analysis script
 echo "Downloading image analysis script..."
-wget -q https://raw.githubusercontent.com/guys-in-the-cloud/cloud-skill-boosts/main/Challenge-labs/Integrate%20with%20Machine%20Learning%20APIs%3A%20Challenge%20Lab/analyze-images-v2.py
+wget -q https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/analyze-images-v2.py
 echo "Script downloaded."
 echo ""
 
