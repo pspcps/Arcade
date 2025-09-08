@@ -1,64 +1,117 @@
+#!/bin/bash
 
+# ==============================================
+#  Security Command Center Export 
+#  Created by Dr. Abhishek Cloud Tutorials
+# ==============================================
+
+clear
+
+# Function to display spinner during long operations
+show_spinner() {
+    local pid=$!
+    local delay=0.1
+    local spin_chars=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏")
+
+    tput civis
+    while kill -0 $pid 2>/dev/null; do
+        for char in "${spin_chars[@]}"; do
+            printf "\r${char} $1 "
+            sleep $delay
+        done
+    done
+    tput cnorm
+    printf "\r✔ $1 completed\n"
+}
+
+# Step 1: Configure environment
+echo "🔧 Configuring environment variables"
 gcloud auth list
 
 export ZONE=$(gcloud compute project-info describe --format="value(commonInstanceMetadata.items[google-compute-default-zone])")
-
 export REGION=$(gcloud compute project-info describe --format="value(commonInstanceMetadata.items[google-compute-default-region])")
-
 export PROJECT_ID=$(gcloud config get-value project)
 
 gcloud config set compute/zone "$ZONE"
-
 gcloud config set compute/region "$REGION"
 
-gcloud services enable securitycenter.googleapis.com --quiet
+echo "✔ Environment configured"
+echo "┣ Project ID: ${PROJECT_ID}"
+echo "┣ Region: ${REGION}"
+echo "┗ Zone: ${ZONE}"
+echo
 
+# Step 2: Enable Security Command Center API
+echo "🛡️ Enabling Security Command Center API"
+gcloud services enable securitycenter.googleapis.com --quiet &
+show_spinner "Enabling API"
+
+# Step 3: Set up Pub/Sub topic and subscription for findings export
+echo "📨 Setting up Pub/Sub for findings export"
 export BUCKET_NAME="scc-export-bucket-$PROJECT_ID"
 
-gcloud pubsub topics create projects/$DEVSHELL_PROJECT_ID/topics/export-findings-pubsub-topic
+gcloud pubsub topics create projects/$PROJECT_ID/topics/export-findings-pubsub-topic &
+show_spinner "Creating Pub/Sub topic"
 
 gcloud pubsub subscriptions create export-findings-pubsub-topic-sub \
-  --topic=projects/$DEVSHELL_PROJECT_ID/topics/export-findings-pubsub-topic
+  --topic=projects/$PROJECT_ID/topics/export-findings-pubsub-topic &
+show_spinner "Creating Pub/Sub subscription"
 
+# Prompt user to configure findings export in the console manually
 echo
-echo -e "\033[1;33mCreate an export-findings-pubsub\033[0m \033[1;34mhttps://console.cloud.google.com/security/command-center/config/continuous-exports/pubsub?project=$DEVSHELL_PROJECT_ID\033[0m"
+echo "🔗 Please create the export configuration:"
+echo "https://console.cloud.google.com/security/command-center/config/continuous-exports/pubsub?project=${PROJECT_ID}"
 echo
 
+# Step 4: User confirmation before proceeding
 while true; do
-    echo -ne "\e[1;93mDo you Want to proceed? (Y/n): \e[0m"
-    read confirm
+    read -p "Do you want to proceed? (Y/n): " confirm
     case "$confirm" in
-        [Yy]) 
-            echo -e "\e[34mRunning the command...\e[0m"
+        [Yy]|"") 
+            echo "Continuing with setup..."
             break
             ;;
-        [Nn]|"") 
+        [Nn]) 
             echo "Operation canceled."
-            break
+            exit 0
             ;;
         *) 
-            echo -e "\e[31mInvalid input. Please enter Y or N.\e[0m" 
+            echo "Invalid input. Please enter Y or N." 
             ;;
     esac
 done
 
+# Step 5: Create a compute instance
+echo "🖥️ Creating compute instance"
 gcloud compute instances create instance-1 --zone=$ZONE \
   --machine-type=e2-micro \
-  --scopes=https://www.googleapis.com/auth/cloud-platform
+  --scopes=https://www.googleapis.com/auth/cloud-platform &
+show_spinner "Creating instance"
 
-bq --location=$REGION mk --dataset $PROJECT_ID:continuous_export_dataset
+# Step 6: Set up BigQuery dataset and export configuration
+echo "📊 Setting up BigQuery dataset"
+bq --location=$REGION mk --dataset $PROJECT_ID:continuous_export_dataset &
+show_spinner "Creating dataset"
 
 gcloud scc bqexports create scc-bq-cont-export \
   --dataset=projects/$PROJECT_ID/datasets/continuous_export_dataset \
   --project=$PROJECT_ID \
-  --quiet
+  --quiet &
+show_spinner "Configuring BigQuery export"
 
+# Step 7: Create test service accounts and keys
+echo "👥 Creating service accounts"
 for i in {0..2}; do
-gcloud iam service-accounts create sccp-test-sa-$i;
-gcloud iam service-accounts keys create /tmp/sa-key-$i.json \
---iam-account=sccp-test-sa-$i@$PROJECT_ID.iam.gserviceaccount.com;
+    gcloud iam service-accounts create sccp-test-sa-$i &
+    show_spinner "Creating service account sccp-test-sa-$i"
+    
+    gcloud iam service-accounts keys create /tmp/sa-key-$i.json \
+    --iam-account=sccp-test-sa-$i@$PROJECT_ID.iam.gserviceaccount.com &
+    show_spinner "Creating key for sccp-test-sa-$i"
 done
 
+# Step 8: Wait for findings to appear in BigQuery
+echo "🔍 Waiting for security findings"
 query_findings() {
   bq query --apilog=/dev/null --use_legacy_sql=false --format=pretty \
     "SELECT finding_id, event_time, finding.category FROM continuous_export_dataset.findings"
@@ -67,34 +120,46 @@ query_findings() {
 has_findings() {
   echo "$1" | grep -qE '^[|] [a-f0-9]{32} '
 }
-wait_for_findings() {
-  while true; do
+
+while true; do
     result=$(query_findings)
     
     if has_findings "$result"; then
-      echo "Findings detected!"
-      echo "$result"
-      break
+        echo "✔ Findings detected!"
+        echo "$result"
+        break
     else
-      echo "No findings yet. Waiting for 100 seconds..."
-      sleep 100
+        echo "No findings yet. Waiting for 100 seconds..."
+        sleep 100
     fi
-  done
-}
-wait_for_findings
+done
 
-gsutil mb -l $REGION gs://$BUCKET_NAME/
-gsutil pap set enforced gs://$BUCKET_NAME
+# Step 9: Set up Cloud Storage bucket
+echo "📦 Setting up Cloud Storage"
+gsutil mb -l $REGION gs://$BUCKET_NAME/ &
+show_spinner "Creating bucket"
+
+gsutil pap set enforced gs://$BUCKET_NAME &
+show_spinner "Enabling public access prevention"
 
 sleep 20
 
+# Step 10: Export findings to Cloud Storage
+echo "📤 Exporting findings to Cloud Storage"
 gcloud scc findings list "projects/$PROJECT_ID" \
-  --format=json | jq -c '.[]' > findings.jsonl
+  --format=json | jq -c '.[]' > findings.jsonl &
+show_spinner "Exporting findings"
 
-sleep 20
+gsutil cp findings.jsonl gs://$BUCKET_NAME/ &
+show_spinner "Uploading findings to bucket"
 
-gsutil cp findings.jsonl gs://$BUCKET_NAME/
-
+# Final summary
 echo
-echo -e "\033[1;33mCreate an old_findings\033[0m \033[1;34mhttps://console.cloud.google.com/bigquery?project=$DEVSHELL_PROJECT_ID\033[0m"
+echo "============================================"
+echo "  SETUP COMPLETE!"
+echo "============================================"
 echo
+echo "Next steps:"
+echo "┣ View findings in BigQuery: https://console.cloud.google.com/bigquery?project=${PROJECT_ID}"
+echo "┣ Check exported files: https://console.cloud.google.com/storage/browser/${BUCKET_NAME}?project=${PROJECT_ID}"
+echo "┗ Monitor SCC findings: https://console.cloud.google.com/security/command-center/findings?project=${PROJECT_ID}"
