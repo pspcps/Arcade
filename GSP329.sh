@@ -8,7 +8,7 @@ read -p "Enter LANGUAGE (e.g., en, fr, es): " LANGUAGE
 read -p "Enter LOCAL (e.g., en_US, fr_FR): " LOCAL
 read -p "Enter BIGQUERY_ROLE (e.g., roles/bigquery.admin): " BIGQUERY_ROLE
 read -p "Enter CLOUD_STORAGE_ROLE (e.g., roles/storage.admin): " CLOUD_STORAGE_ROLE
-read -p "Enter GCS Bucket Name (e.g., my-bucket): " BUCKET_NAME
+# read -p "Enter GCS Bucket Name (e.g., my-bucket): " BUCKET_NAME
 echo ""
 
 # Create service account
@@ -69,7 +69,7 @@ echo ""
 
 # Run the Python script
 echo "Running image analysis script..."
-python3 analyze-images-v2.py "$DEVSHELL_PROJECT_ID" "$BUCKET_NAME"
+python3 analyze-images-v2.py "$DEVSHELL_PROJECT_ID" "$DEVSHELL_PROJECT_ID"
 echo ""
 
 # Query results
