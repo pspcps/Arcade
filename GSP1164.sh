@@ -112,27 +112,67 @@ done
 
 # Step 8: Wait for findings to appear in BigQuery
 echo "🔍 Waiting for security findings"
+# query_findings() {
+#   bq query --apilog=/dev/null --use_legacy_sql=false --format=pretty \
+#     "SELECT finding_id, event_time, finding.category FROM continuous_export_dataset.findings"
+# }
+
+# has_findings() {
+#   echo "$1" | grep -qE '^[|] [a-f0-9]{32} '
+# }
+
+# while true; do
+#     result=$(query_findings)
+    
+#     if has_findings "$result"; then
+#         echo "✔ Findings detected!"
+#         echo "$result"
+#         break
+#     else
+#         echo "No findings yet. Waiting for 100 seconds..."
+#         sleep 100
+#     fi
+# done
+
+
+# Function to query findings in BigQuery
 query_findings() {
-  bq query --apilog=/dev/null --use_legacy_sql=false --format=pretty \
+  bq query --use_legacy_sql=false --format=json \
     "SELECT finding_id, event_time, finding.category FROM continuous_export_dataset.findings"
 }
 
+# Function to check if findings exist using jq
 has_findings() {
-  echo "$1" | grep -qE '^[|] [a-f0-9]{32} '
+  echo "$1" | jq -e 'length > 0' >/dev/null 2>&1
 }
 
-while true; do
-    result=$(query_findings)
+# Retry for up to 15 minutes (9 attempts every 100 seconds)
+MAX_ATTEMPTS=9
+attempt=1
+
+echo "🔍 Checking for findings in BigQuery..."
+while [ $attempt -le $MAX_ATTEMPTS ]; do
+    echo "Attempt $attempt of $MAX_ATTEMPTS..."
     
+    result=$(query_findings)
+
     if has_findings "$result"; then
         echo "✔ Findings detected!"
-        echo "$result"
+        echo "$result" | jq
         break
     else
         echo "No findings yet. Waiting for 100 seconds..."
         sleep 100
+        attempt=$((attempt + 1))
     fi
 done
+
+if [ $attempt -gt $MAX_ATTEMPTS ]; then
+    echo "❌ No findings detected after $((MAX_ATTEMPTS * 100 / 60)) minutes. Exiting..."
+    # exit 1
+fi
+
+
 
 # Step 9: Set up Cloud Storage bucket
 echo "📦 Setting up Cloud Storage"
@@ -161,5 +201,4 @@ echo "============================================"
 echo
 echo "Next steps:"
 echo "┣ View findings in BigQuery: https://console.cloud.google.com/bigquery?project=${PROJECT_ID}"
-echo "┣ Check exported files: https://console.cloud.google.com/storage/browser/${BUCKET_NAME}?project=${PROJECT_ID}"
-echo "┗ Monitor SCC findings: https://console.cloud.google.com/security/command-center/findings?project=${PROJECT_ID}"
+
