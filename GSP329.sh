@@ -4,8 +4,8 @@
 
 # Prompt user for required configuration
 echo "Configuration Parameters"
-read -p "Enter LANGUAGE (e.g., en, fr, es): " LANGUAGE
-read -p "Enter LOCAL (e.g., en_US, fr_FR): " LOCAL
+read -p "Enter LANGUAGE (e.g., Japanese, English): " LANGUAGE
+read -p "Enter LOCAL (e.g., en, fr, es): " LOCAL
 read -p "Enter BIGQUERY_ROLE (e.g., roles/bigquery.admin): " BIGQUERY_ROLE
 read -p "Enter CLOUD_STORAGE_ROLE (e.g., roles/storage.admin): " CLOUD_STORAGE_ROLE
 # read -p "Enter GCS Bucket Name (e.g., my-bucket): " BUCKET_NAME
