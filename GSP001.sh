@@ -57,6 +57,7 @@ EXTERNAL_IP=$(gcloud compute instances describe "$INSTANCE_NAME" \
   --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
 
 
+
 gcloud compute instances create gcelab2 --machine-type e2-medium --zone=$ZONE
 
 
