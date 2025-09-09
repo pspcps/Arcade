@@ -8,9 +8,9 @@ echo "Buckets created successfully"
 # Step 2: Downloading Images
 echo
 echo "Step 2: Downloading Demo Images"
-curl -# -LO raw.githubusercontent.com/GoogleCloudPlatform/cloud-storage-samples/main/sample-files/demo-image1.png
-curl -# -LO raw.githubusercontent.com/GoogleCloudPlatform/cloud-storage-samples/main/sample-files/demo-image2.png
-curl -# -LO raw.githubusercontent.com/GoogleCloudPlatform/cloud-storage-samples/main/sample-files/demo-image1-copy.png
+curl -# -LO https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/demo-image1.png
+curl -# -LO https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/demo-image2.png
+
 echo "Images downloaded successfully"
 
 # Step 3: Uploading Images
@@ -18,5 +18,5 @@ echo
 echo "Step 3: Uploading Images to Cloud Storage"
 gsutil cp demo-image1.png gs://$DEVSHELL_PROJECT_ID/demo-image1.png
 gsutil cp demo-image2.png gs://$DEVSHELL_PROJECT_ID/demo-image2.png
-gsutil cp demo-image1-copy.png gs://$DEVSHELL_PROJECT_ID-2/demo-image1-copy.png
+gsutil cp demo-image1.png gs://$DEVSHELL_PROJECT_ID-2/demo-image1-copy.png
 echo "Files uploaded successfully"
