@@ -19,6 +19,8 @@ INSTANCE_NAME="gcelab"
 
 echo "Creating VM instance: $INSTANCE_NAME in zone $ZONE (region $REGION)..."
 
+
+
 # Create VM with startup script to install NGINX
 gcloud compute instances create "$INSTANCE_NAME" \
   --zone="$ZONE" \
@@ -53,6 +55,10 @@ fi
 EXTERNAL_IP=$(gcloud compute instances describe "$INSTANCE_NAME" \
   --zone="$ZONE" \
   --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+
+
+gcloud compute instances create gcelab2 --machine-type e2-medium --zone=$ZONE
+
 
 echo ""
 echo "======================================"
