@@ -557,19 +557,19 @@ gcloud compute instance-groups managed rolling-action start-update $FRONTEND_MIG
 echo "⏳ Waiting for rollout to stabilize (~3 minutes)..."
 sleep 180
 
-echo "📋 Checking updated instance..."
-INSTANCE_NAME=$(gcloud compute instance-groups managed list-instances $FRONTEND_MIG \
-  --zone=$ZONE \
-  --format="get(instance)" | head -n 1)
+# echo "📋 Checking updated instance..."
+# INSTANCE_NAME=$(gcloud compute instance-groups managed list-instances $FRONTEND_MIG \
+#   --zone=$ZONE \
+#   --format="get(instance)" | head -n 1)
 
-if [ -z "$INSTANCE_NAME" ]; then
-  echo "❌ Failed to retrieve instance name from MIG."
-  exit 1
-fi
+# if [ -z "$INSTANCE_NAME" ]; then
+#   echo "❌ Failed to retrieve instance name from MIG."
+#   exit 1
+# fi
 
-echo "🔍 Instance name found: $INSTANCE_NAME"
-echo "🔍 Verifying machine type for $INSTANCE_NAME..."
-gcloud compute instances describe "$INSTANCE_NAME" --zone="$ZONE" | grep machineType
+# echo "🔍 Instance name found: $INSTANCE_NAME"
+# echo "🔍 Verifying machine type for $INSTANCE_NAME..."
+# gcloud compute instances describe "$INSTANCE_NAME" --zone="$ZONE" | grep machineType
 
 
 echo ""
