@@ -480,48 +480,6 @@ GCS_BUCKET="gs://fancy-store-$PROJECT_ID"
 echo "🛠️ Starting full deployment automation..."
 
 
-# ---------------------------------------
-# Task 8: Update Instance Template
-# ---------------------------------------
-
-echo "💻 Changing machine type of instance '$FRONTEND_INSTANCE' to e2-small..."
-gcloud compute instances set-machine-type $FRONTEND_INSTANCE \
-  --zone=$ZONE \
-  --machine-type=e2-small
-
-echo "🧱 Creating new instance template from updated instance..."
-gcloud compute instance-templates create $NEW_TEMPLATE_NAME \
-  --region=$REGION \
-  --source-instance=$FRONTEND_INSTANCE \
-  --source-instance-zone=$ZONE
-
-echo "🔁 Rolling out new template to frontend MIG..."
-gcloud compute instance-groups managed rolling-action start-update $FRONTEND_MIG \
-  --zone=$ZONE \
-  --version template=$NEW_TEMPLATE_NAME
-
-# ---------------------------------------
-# Wait for the rollout to complete
-# ---------------------------------------
-
-echo "⏳ Waiting for rollout to stabilize (~3 minutes)..."
-sleep 180
-
-# echo "📋 Checking updated instance..."
-# INSTANCE_NAME=$(gcloud compute instance-groups managed list-instances $FRONTEND_MIG \
-#   --zone=$ZONE \
-#   --format="get(instance)" | head -n 1)
-
-# if [ -z "$INSTANCE_NAME" ]; then
-#   echo "❌ Failed to retrieve instance name from MIG."
-#   exit 1
-# fi
-
-# echo "🔍 Instance name found: $INSTANCE_NAME"
-# echo "🔍 Verifying machine type for $INSTANCE_NAME..."
-# gcloud compute instances describe "$INSTANCE_NAME" --zone="$ZONE" | grep machineType
-
-
 echo ""
 echo "⚠️  BEFORE CONTINUING..."
 echo ""
@@ -535,7 +493,7 @@ read -p "👉 Have you completed Task 7. (Scale Compute Engine) and clicked 'Che
 echo "📝 Updating homepage content..."
 cd ~/monolith-to-microservices/react-app/src/pages/Home || {
   echo "❌ Directory not found. Are you in the right environment?"
-  exit 1
+  # exit 1
 }
 
 if [ -f index.js.new ]; then
@@ -551,7 +509,7 @@ fi
 echo "📦 Installing and building React app..."
 cd ~/monolith-to-microservices/react-app || {
   echo "❌ React app directory not found!"
-  exit 1
+  # exit 1
 }
 
 npm install && npm run-script build
