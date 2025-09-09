@@ -467,36 +467,9 @@ gcloud compute instance-groups managed rolling-action start-update $FRONTEND_MIG
 # Wait for the rollout to complete
 # -------------------------------
 
-echo "⏳ Waiting for rollout to stabilize (~3 minutes)..."
-sleep 180
+echo "⏳ Waiting for rollout to stabilize..."
+sleep 40
 
-echo "📋 Checking updated instance..."
-INSTANCE_NAME=$(gcloud compute instance-groups managed list-instances $FRONTEND_MIG \
-  --zone=$ZONE \
-  --format="value(instance)" | head -n 1)
-
-if [ -z "$INSTANCE_NAME" ]; then
-  echo "❌ Failed to retrieve instance name from MIG."
-  exit 1
-fi
-
-echo "🔍 Verifying machine type for $INSTANCE_NAME..."
-gcloud compute instances describe "$INSTANCE_NAME" --zone="$ZONE" | grep machineType
-
-# --
-
-echo ""
-echo "⚠️  BEFORE CONTINUING..."
-echo ""
-echo ""
-read -p "👉 Have you completed Task 4 and clicked 'Check My Progress'? (y/N): " confirm
-
-
-#
-# ---------------------------------------
-# Configuration Variables
-# ---------------------------------------
-\
 FRONTEND_INSTANCE="frontend"
 FRONTEND_MIG="fancy-fe-mig"
 BACKEND_MIG="fancy-be-mig"
@@ -506,29 +479,6 @@ GCS_BUCKET="gs://fancy-store-$PROJECT_ID"
 
 echo "🛠️ Starting full deployment automation..."
 
-# ---------------------------------------
-# Task 7: Set Autoscaling Policies
-# ---------------------------------------
-
-echo "🚀 Enabling autoscaling on frontend MIG..."
-gcloud compute instance-groups managed set-autoscaling $FRONTEND_MIG \
-  --zone=$ZONE \
-  --max-num-replicas=2 \
-  --target-load-balancing-utilization=0.60
-
-echo "🚀 Enabling autoscaling on backend MIG..."
-gcloud compute instance-groups managed set-autoscaling $BACKEND_MIG \
-  --zone=$ZONE \
-  --max-num-replicas=2 \
-  --target-load-balancing-utilization=0.60
-
-# ---------------------------------------
-# Task 7: Enable Cloud CDN
-# ---------------------------------------
-
-echo "🌐 Enabling Cloud CDN for frontend service..."
-gcloud compute backend-services update $FRONTEND_SERVICE_NAME \
-  --enable-cdn --global
 
 # ---------------------------------------
 # Task 8: Update Instance Template
