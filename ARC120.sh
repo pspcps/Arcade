@@ -16,6 +16,8 @@ BUCKET_NAME="${PROJECT_ID}-bucket"
 echo "Creating Cloud Storage bucket: $BUCKET_NAME"
 
 
+gsutil mb -l US gs://$BUCKET_NAME/
+
 # Create a VM instance with an additional disk
 gcloud compute instances create my-instance \
     --machine-type=e2-medium \
