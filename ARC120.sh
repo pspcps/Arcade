@@ -6,6 +6,16 @@ read -p "Enter the GCP zone (e.g., us-central1-a): " ZONE
 # Confirm input
 echo "Using zone: $ZONE"
 
+
+# Get current GCP project ID
+PROJECT_ID=$(gcloud config get-value project)
+echo "Using project: $PROJECT_ID"
+
+# Task 1: Create a Cloud Storage bucket
+BUCKET_NAME="${PROJECT_ID}-bucket"
+echo "Creating Cloud Storage bucket: $BUCKET_NAME"
+
+
 # Create a VM instance with an additional disk
 gcloud compute instances create my-instance \
     --machine-type=e2-medium \
