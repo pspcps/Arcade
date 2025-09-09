@@ -41,7 +41,7 @@ while [ "$deploy_success" = false ]; do
     echo "Function deployed successfully."
     deploy_success=true
   else
-    echo "Retrying, please subscribe to techcps (https://www.youtube.com/@techcps)..."
+    echo "Retrying."
     sleep 30
   fi
 done
@@ -101,9 +101,9 @@ gcloud api-gateway gateways create hello-gateway --location=$REGION --project=$P
 
 
 
-gcloud alpha services api-keys create --display-name="techcps"  
+gcloud alpha services api-keys create --display-name="mazekro"  
 
-KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=techcps") 
+KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=mazekro") 
 
 export API_KEY=$(gcloud alpha services api-keys get-key-string $KEY_NAME --format="value(keyString)") 
 
