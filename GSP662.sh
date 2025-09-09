@@ -288,7 +288,10 @@ gcloud compute instance-groups managed update fancy-be-mig \
 
 # ----------------
 
-
+echo ""
+echo "⚠️  BEFORE CONTINUING..."
+echo ""
+echo ""
 read -p "👉 Have you completed Task 5 and clicked 'Check My Progress'? (y/N): " confirm
 
 
@@ -355,6 +358,10 @@ gcloud compute forwarding-rules create fancy-http-rule \
 
 
 
+echo ""
+echo "⚠️  BEFORE CONTINUING..."
+echo ""
+echo ""
 read -p "👉 Have you completed Task 6 1st progress and clicked 'Check My Progress'? (y/N): " confirm
 
 
@@ -393,6 +400,10 @@ gcloud compute instance-groups managed rolling-action replace fancy-fe-mig \
 echo "✅ Load balancer setup completed successfully."
 
 
+echo ""
+echo "⚠️  BEFORE CONTINUING..."
+echo ""
+echo ""
 read -p "👉 Have you completed Task 6 2nd progress and clicked 'Check My Progress'? (y/N): " confirm
 
 # -------------------------------
@@ -474,6 +485,10 @@ gcloud compute instances describe "$INSTANCE_NAME" --zone="$ZONE" | grep machine
 
 # --
 
+echo ""
+echo "⚠️  BEFORE CONTINUING..."
+echo ""
+echo ""
 read -p "👉 Have you completed Task 4 and clicked 'Check My Progress'? (y/N): " confirm
 
 
@@ -557,6 +572,10 @@ echo "🔍 Verifying machine type for $INSTANCE_NAME..."
 gcloud compute instances describe "$INSTANCE_NAME" --zone="$ZONE" | grep machineType
 
 
+echo ""
+echo "⚠️  BEFORE CONTINUING..."
+echo ""
+echo ""
 read -p "👉 Have you completed Task 7. (Scale Compute Engine) and clicked 'Check My Progress'? (y/N): " confirm
 
 # ---------------------------------------
