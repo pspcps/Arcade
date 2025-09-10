@@ -17,6 +17,8 @@ else
     echo -e "\rExisting API Key found: $KEY_NAME"
 fi
 
+sleep 5
+
 echo -n "Fetching API Key String..."
 API_KEY=$(gcloud alpha services api-keys get-key-string "$KEY_NAME" --format="value(keyString)")
 echo -e "\rAPI Key String retrieved!"
