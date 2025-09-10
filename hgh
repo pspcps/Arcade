@@ -1,0 +1,120 @@
+#!/bin/bash
+
+set -e
+
+echo "🚀 Starting Hugo + Firebase automated deployment script..."
+
+# Set environment variables
+export PROJECT_ID=$(gcloud config get-value project)
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+REGION=$(gcloud compute project-info describe --format="value(commonInstanceMetadata.items[google-compute-default-region])")
+if [ -z "$REGION" ]; then
+  echo "⚠️ Region not found in project metadata."
+  read -p "❓ Please enter your region (e.g. us-central1, us-east4): " REGION
+fi
+export REGION
+# Update and install dependencies
+sudo apt-get update -y
+sudo apt-get install -y git curl unzip
+
+# Install GitHub CLI
+curl -sS https://webi.sh/gh | sh
+source ~/.config/envman/PATH.env
+
+# Authenticate GitHub CLI
+gh auth login
+
+# Install Hugo
+cd ~
+/tmp/installhugo.sh
+
+# GitHub repo creation
+GITHUB_USERNAME=$(gh api user -q ".login")
+USER_EMAIL="${GITHUB_USERNAME}@users.noreply.github.com"
+git config --global user.name "$GITHUB_USERNAME"
+git config --global user.email "$USER_EMAIL"
+
+REPO_NAME="my_hugo_site"
+gh repo create $REPO_NAME --private --confirm
+gh repo clone $REPO_NAME
+cd $REPO_NAME
+
+# Create Hugo site in existing directory
+/tmp/hugo new site . --force
+
+# Add theme
+git clone https://github.com/rhazdon/hugo-theme-hello-friend-ng.git themes/hello-friend-ng
+echo 'theme = "hello-friend-ng"' >> config.toml
+sudo rm -r themes/hello-friend-ng/.git
+sudo rm themes/hello-friend-ng/.gitignore
+
+# Preview site (optional)
+# /tmp/hugo server -D --bind 0.0.0.0 --port 8080
+
+# Install Firebase CLI
+curl -sL https://firebase.tools | bash
+
+# Initialize Firebase Hosting
+firebase init hosting --project "$PROJECT_ID" --public "public" --config firebase.json --token "$(gcloud auth print-access-token)"
+
+# Build & Deploy to Firebase
+/tmp/hugo
+firebase deploy
+
+# Initial Git commit
+echo "resources" >> .gitignore
+git add .
+git commit -m "Initial Hugo site commit"
+git push -u origin main
+
+# Add cloudbuild.yaml
+cp /tmp/cloudbuild.yaml .
+git add cloudbuild.yaml
+git commit -m "Add Cloud Build config"
+git push
+
+# Create GitHub connection
+gcloud builds connections create github cloud-build-connection \
+  --project=$PROJECT_ID --region=$REGION
+
+# Describe connection and get actionUri
+ACTION_URI=$(gcloud builds connections describe cloud-build-connection \
+  --region=$REGION --format='value(installationState.actionUri)')
+
+echo "🔗 ACTION REQUIRED: Open the following URL in your browser to complete GitHub App authorization:"
+echo "$ACTION_URI"
+read -p "After authorizing GitHub App, press Enter to continue..."
+
+# Create Cloud Build repository
+gcloud builds repositories create "$REPO_NAME" \
+  --remote-uri="https://github.com/${GITHUB_USERNAME}/${REPO_NAME}.git" \
+  --connection="cloud-build-connection" --region=$REGION
+
+# Create Cloud Build trigger
+gcloud builds triggers create github --name="commit-to-main-branch1" \
+   --repository=projects/$PROJECT_ID/locations/$REGION/connections/cloud-build-connection/repositories/$REPO_NAME \
+   --build-config='cloudbuild.yaml' \
+   --service-account=projects/$PROJECT_ID/serviceAccounts/$PROJECT_NUMBER-compute@developer.gserviceaccount.com \
+   --region=$REGION \
+   --branch-pattern='^main$'
+
+# Assign Firebase Hosting role
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
+  --role="roles/firebasehosting.admin"
+
+# Final test change
+echo 'title = "Blogging with Hugo and Cloud Build"' > config.toml
+git add config.toml
+git commit -m "Update site title for test build"
+git push
+
+echo "✅ Script finished. The Cloud Build pipeline should now be running..."
+
+# Output Firebase Hosting URL (once build finishes)
+echo "⌛ Waiting for build to complete... this may take 1–2 minutes"
+sleep 90
+gcloud builds list --region=$REGION
+gcloud builds log "$(gcloud builds list --format='value(ID)' --filter=$(git rev-parse HEAD) --region=$REGION)" --region=$REGION | grep "Hosting URL"
+
+echo "🌐 Visit your Firebase-hosted site above!"
