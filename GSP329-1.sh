@@ -49,13 +49,13 @@ echo ""
 
 # Download analysis script
 echo "Downloading image analysis script..."
-wget -q https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/analyze-images-v2.py
+wget -q https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/analyze-images-v3.py
 echo "Script downloaded."
 echo ""
 
 # Replace locale in script
 echo "Updating script locale..."
-sed -i "s/'en'/'${LOCAL}'/g" analyze-images-v2.py
+sed -i "s/'en'/'${LOCAL}'/g" analyze-images-v3.py
 echo "Locale updated."
 echo ""
 
@@ -68,8 +68,16 @@ echo "Dataset and table ready."
 echo ""
 
 # Run the Python script
+# echo "Running image analysis script..."
+# python3 analyze-images-v2.py "$DEVSHELL_PROJECT_ID" "$DEVSHELL_PROJECT_ID"
+# echo ""
+
 echo "Running image analysis script..."
-python3 analyze-images-v2.py "$DEVSHELL_PROJECT_ID" "$DEVSHELL_PROJECT_ID"
+if python3 analyze-images-v3.py "$DEVSHELL_PROJECT_ID" "$DEVSHELL_PROJECT_ID"; then
+    echo "Image analysis script completed successfully."
+else
+    echo "Warning: Image analysis script encountered an error but continuing..."
+fi
 echo ""
 
 # Query results
