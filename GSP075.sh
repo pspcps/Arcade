@@ -2,19 +2,26 @@
 echo "STEP 1: API KEY SETUP"
 echo
 
-echo -n "Creating API Key..."
-(gcloud alpha services api-keys create --display-name="cloud-ml-key" > /dev/null 2>&1) &
-sleep 0.5
-echo -e "\rAPI Key created successfully!"
+echo -n "Checking for existing API Key..."
+KEY_NAME=$(gcloud alpha services api-keys list \
+  --format="value(name)" \
+  --filter="displayName=cloud-ml-key")
 
-echo -n "Fetching API Key Name..."
-KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=cloud-ml-key" 2>/dev/null)
-echo -e "\rAPI Key Name: $KEY_NAME"
+if [ -z "$KEY_NAME" ]; then
+    echo -e "\rNo existing API Key found. Creating new one..."
+    KEY_NAME=$(gcloud alpha services api-keys create \
+        --display-name="cloud-ml-key" \
+        --format="value(name)")
+    echo "API Key created: $KEY_NAME"
+else
+    echo -e "\rExisting API Key found: $KEY_NAME"
+fi
 
 echo -n "Fetching API Key String..."
-API_KEY=$(gcloud alpha services api-keys get-key-string $KEY_NAME --format="value(keyString)" 2>/dev/null)
+API_KEY=$(gcloud alpha services api-keys get-key-string "$KEY_NAME" --format="value(keyString)")
 echo -e "\rAPI Key String retrieved!"
-echo
+
+
 
 # Step 2: Project Configuration
 echo "STEP 2: PROJECT CONFIGURATION"
