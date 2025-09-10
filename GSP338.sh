@@ -180,7 +180,6 @@ EOF_CP
 gcloud alpha monitoring policies create --policy-from-file=video-queue-alert.json
 echo "Alert policy created successfully!"
 echo
-
 # -------------------- DASHBOARD UPDATE --------------------
 echo "Fetching existing Media_Dashboard..."
 
@@ -197,6 +196,7 @@ echo "Media_Dashboard JSON exported."
 
 echo "Injecting new charts into Media_Dashboard JSON..."
 
+# Define the charts to be added
 cat <<EOF > charts.json
 [
   {
@@ -252,7 +252,7 @@ cat <<EOF > charts.json
         {
           "timeSeriesQuery": {
             "timeSeriesFilter": {
-              "filter": "metric.type=\"custom.googleapis.com/opencensus/my.videoservice.org/measure/input_queue_size\",
+              "filter": "metric.type=\"custom.googleapis.com/opencensus/my.videoservice.org/measure/input_queue_size\"",
               "aggregation": {
                 "alignmentPeriod": "60s",
                 "perSeriesAligner": "ALIGN_MEAN"
@@ -271,15 +271,17 @@ cat <<EOF > charts.json
 ]
 EOF
 
+# Ensure jq is installed
 if ! command -v jq &> /dev/null; then
-  echo "Installing jq for JSON editing..."
-  sudo apt-get install jq -y
+  echo "Installing jq for JSON processing..."
+  sudo apt-get update && sudo apt-get install jq -y
 fi
 
+# Merge charts into existing dashboard, preserving etag and structure
 jq --argjson charts "$(cat charts.json)" '
   .gridLayout.widgets += $charts
 ' media_dashboard.json > updated_media_dashboard.json
 
 echo "Updating Media_Dashboard with new charts..."
 gcloud monitoring dashboards update "$DASHBOARD_ID" --config-from-file=updated_media_dashboard.json
-echo "Dashboard updated successfully!"
+echo "✅ Dashboard updated successfully with new charts!"
