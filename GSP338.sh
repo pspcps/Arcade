@@ -200,29 +200,6 @@ echo "Injecting new charts into Media_Dashboard JSON..."
 cat <<EOF > charts.json
 [
   {
-    "title": "Video Input Queue Length",
-    "xyChart": {
-      "dataSets": [
-        {
-          "timeSeriesQuery": {
-            "timeSeriesFilter": {
-              "filter": "metric.type=\"custom.googleapis.com/video/input_queue_length\"",
-              "aggregation": {
-                "alignmentPeriod": "60s",
-                "perSeriesAligner": "ALIGN_MEAN"
-              }
-            }
-          }
-        }
-      ],
-      "timeshiftDuration": "0s",
-      "yAxis": {
-        "label": "Queue Length",
-        "scale": "LINEAR"
-      }
-    }
-  },
-  {
     "title": "High-Res Video Upload Rate",
     "xyChart": {
       "dataSets": [
