@@ -22,7 +22,6 @@ API_KEY=$(gcloud alpha services api-keys get-key-string "$KEY_NAME" --format="va
 echo -e "\rAPI Key String retrieved!"
 
 
-
 # Step 2: Project Configuration
 echo "STEP 2: PROJECT CONFIGURATION"
 echo
@@ -54,7 +53,7 @@ echo "STEP 4: IMAGE PROCESSING"
 echo
 
 echo -n "Downloading sample image..."
-(curl -LO raw.githubusercontent.com/ArcadeCrew/Google-Cloud-Labs/main/Extract%2C%20Analyze%2C%20and%20Translate%20Text%20from%20Images%20with%20the%20Cloud%20ML%20APIs/sign.jpg > /dev/null 2>&1) &
+(curl -LO https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/sign.jpg > /dev/null 2>&1) &
 sleep 0.5
 echo -e "\rSample image downloaded!"
 
