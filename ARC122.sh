@@ -1,6 +1,6 @@
 echo "STEP 1: Creating API Key..."
 gcloud alpha services api-keys create --display-name="vision-lab-key" || {
-    echo "Error: Failed to create API key"
+    echo "Error: Failed to create API key; Close the tab and reopen"
     exit 1
 }
 
