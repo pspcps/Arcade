@@ -1,6 +1,10 @@
 
-echo "Please set the below values correctly"
-read -p "Enter the MESSAGE: " MESSAGE
+read -p "Enter the message to display in your app [default: Welcome to this world!]: " MESSAGE
+MESSAGE=${MESSAGE:-Welcome to this world!}
+
+echo "Enabling App Engine Admin API..."
+gcloud services enable appengine.googleapis.com --quiet
+
 
 # Export variables after collecting input
 export MESSAGE
