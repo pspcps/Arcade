@@ -45,7 +45,7 @@ touch translation-request.json
 
 tee translation-request.json <<EOF_CP
 {
-  "q": "Hello dosto mazekro", 
+  "q": "Hello Friends", 
   "target": "en"
 }
 EOF_CP
@@ -60,7 +60,7 @@ tee nl-request.json <<EOF_CP
 {
   "document":{
     "type":"PLAIN_TEXT",
-    "content":"maze kro life me"
+    "content":"enjoy like"
   },
   "encodingType":"UTF8"
 }
