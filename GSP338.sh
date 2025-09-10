@@ -206,7 +206,7 @@ cat <<EOF > charts.json
         {
           "timeSeriesQuery": {
             "timeSeriesFilter": {
-              "filter": "metric.type=\"logging.googleapis.com/user/big_video_upload_rate\"",
+              "filter": "metric.type=\"custom.googleapis.com/video/input_queue_length\"",
               "aggregation": {
                 "alignmentPeriod": "60s",
                 "perSeriesAligner": "ALIGN_MEAN"
@@ -229,7 +229,7 @@ cat <<EOF > charts.json
         {
           "timeSeriesQuery": {
             "timeSeriesFilter": {
-              "filter": "metric.type=\"logging.googleapis.com/user/$custom_metric\"",
+              "filter": "metric.type=\"logging.googleapis.com/user/big_video_upload_rate\"",
               "aggregation": {
                 "alignmentPeriod": "60s",
                 "perSeriesAligner": "ALIGN_RATE"
