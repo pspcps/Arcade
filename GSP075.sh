@@ -2,7 +2,7 @@ gcloud auth list
 
 gcloud alpha services api-keys create --display-name="mazekro"
 
-KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=techcps")
+KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=mazekro")
 
 API_KEY=$(gcloud alpha services api-keys get-key-string $KEY_NAME --format="value(keyString)")
 
@@ -45,7 +45,7 @@ touch translation-request.json
 
 tee translation-request.json <<EOF_CP
 {
-  "q": "subscribe to techcps", 
+  "q": "Hello dosto mazekro", 
   "target": "en"
 }
 EOF_CP
@@ -60,7 +60,7 @@ tee nl-request.json <<EOF_CP
 {
   "document":{
     "type":"PLAIN_TEXT",
-    "content":"like share & subscribe to techcps"
+    "content":"maze kro life me"
   },
   "encodingType":"UTF8"
 }
