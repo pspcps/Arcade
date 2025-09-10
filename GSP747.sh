@@ -77,56 +77,59 @@ git clone $THEME_REPO themes/hello-friend-ng >> $LOG_FILE 2>&1 || handle_error "
 echo 'theme = "hello-friend-ng"' >> config.toml
 sudo rm -rf themes/hello-friend-ng/.git themes/hello-friend-ng/.gitignore >> $LOG_FILE 2>&1
 
+# Start Hugo server (manual view)
+echo "🌍 Preview site at: http://[YOUR_EXTERNAL_IP]:8080"
+echo "⏳ Starting Hugo server (CTRL+C to stop)..."
+sleep 2
+/tmp/hugo server -D --bind 0.0.0.0 --port 8080
 # Initial commit
 echo "📤 Performing initial commit..."
+git config --global user.name "hugo"
+git config --global user.email "hugo@blogger.com"
+echo "resources" >> .gitignore
+git add . && git commit -m "Initial commit" && git push -u origin main >> $LOG_FILE 2>&1 || handle_error "Initial git commit failed"
+
+# Copy cloudbuild.yaml
 git add . && git commit -m "Initial commit" && git push -u origin main >> $LOG_FILE 2>&1 || handle_error "Initial git commit failed"
 
 # Copy cloudbuild.yaml
 echo "📄 Adding cloudbuild.yaml..."
 cp /tmp/cloudbuild.yaml . || handle_error "Missing cloudbuild.yaml"
 
-# Create connection only if it doesn't exist
-echo "🔗 Checking for existing Cloud Build GitHub connection..."
-if ! gcloud builds connections describe $CLOUD_BUILD_CONNECTION --region=$REGION >> $LOG_FILE 2>&1; then
-  echo "📡 Creating Cloud Build GitHub connection..."
-  gcloud builds connections create github $CLOUD_BUILD_CONNECTION --project=$PROJECT_ID --region=$REGION >> $LOG_FILE 2>&1 || handle_error "Connection creation failed"
-  echo "🌐 Authorize Cloud Build access:"
-  gcloud builds connections describe $CLOUD_BUILD_CONNECTION --region=$REGION | grep actionUri
-  read -p "👉 After authorizing in browser, press [Enter] to continue..."
-else
-  echo "✅ Connection already exists. Skipping creation."
-fi
+# Connect GitHub to Cloud Build
+echo "🔗 Creating Cloud Build GitHub connection..."
+gcloud builds connections create github cloud-build-connection --project=$PROJECT_ID --region=$REGION >> $LOG_FILE 2>&1 || handle_error "Connection creation failed"
+
+echo "🌐 Authorize Cloud Build access:"
+gcloud builds connections describe cloud-build-connection --region=$REGION | grep actionUri
+
+# Wait for user
+read -p "👉 After authorizing in browser, press [Enter] to continue..."
 
 # Create Cloud Build repo
 echo "🗃️ Creating Cloud Build repository..."
 gcloud builds repositories create $CLOUD_BUILD_REPO \
   --remote-uri="https://github.com/${GITHUB_USERNAME}/${REPO_NAME}.git" \
-  --connection=$CLOUD_BUILD_CONNECTION --region=$REGION >> $LOG_FILE 2>&1 || echo "⚠️ Repo may already exist. Continuing..."
+  --connection="cloud-build-connection" --region=$REGION >> $LOG_FILE 2>&1 || handle_error "Cloud Build repo creation failed"
 
 # Create trigger
 echo "🎯 Creating build trigger..."
 gcloud builds triggers create github --name="commit-to-main-branch1" \
-   --repository=projects/$PROJECT_ID/locations/$REGION/connections/$CLOUD_BUILD_CONNECTION/repositories/$CLOUD_BUILD_REPO \
+   --repository=projects/$PROJECT_ID/locations/$REGION/connections/cloud-build-connection/repositories/$CLOUD_BUILD_REPO \
    --build-config='cloudbuild.yaml' \
    --service-account=projects/$PROJECT_ID/serviceAccounts/$PROJECT_NUMBER-compute@developer.gserviceaccount.com \
    --region=$REGION \
-   --branch-pattern='^main$' >> $LOG_FILE 2>&1 || echo "⚠️ Trigger may already exist. Continuing..."
+   --branch-pattern='^main$' >> $LOG_FILE 2>&1 || handle_error "Failed to create trigger"
 
-# Test the pipeline with title update
+# Test the pipeline
 echo "🧪 Testing Cloud Build pipeline..."
 sed -i 's/title = ".*"/title = "Blogging with Hugo and Cloud Build"/' config.toml
-git add . && git commit -m "I updated the site title" && git push -u origin main >> $LOG_FILE 2>&1 || handle_error "Failed to trigger build"
+git add . && git commit -m "Updated site title" && git push >> $LOG_FILE 2>&1 || handle_error "Failed to trigger build"
 
-# Wait and fetch build status
-echo "🕒 Waiting for build to start..."
-sleep 20
-BUILD_ID=$(gcloud builds list --region=$REGION --format='value(ID)' --filter=$(git rev-parse HEAD))
+# Output build URL
+sleep 10
+echo "🔍 Checking build status..."
+gcloud builds list --region=$REGION | tee -a $LOG_FILE
 
-echo "🔍 Fetching build logs..."
-gcloud builds log --region=$REGION $BUILD_ID | tee -a $LOG_FILE
-
-echo "🌐 Fetching Firebase Hosting URL..."
-gcloud builds log $BUILD_ID --region=$REGION | grep "Hosting URL" | tee -a $LOG_FILE
-
-echo "✅ Deployment complete. Check your hosting URL above."
+echo "🌐 Your site should be deployed to Firebase CDN soon."
 echo "📄 Full log saved to: $LOG_FILE"
