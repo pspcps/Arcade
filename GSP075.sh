@@ -4,7 +4,7 @@ echo
 
 echo -n "Creating API Key..."
 (gcloud alpha services api-keys create --display-name="cloud-ml-key" > /dev/null 2>&1) &
-spinner
+sleep 0.5
 echo -e "\rAPI Key created successfully!"
 
 echo -n "Fetching API Key Name..."
@@ -33,12 +33,12 @@ echo
 
 echo -n "Creating GCS Bucket..."
 (gcloud storage buckets create gs://$DEVSHELL_PROJECT_ID-bucket --project=$DEVSHELL_PROJECT_ID > /dev/null 2>&1) &
-spinner
+sleep 0.5
 echo -e "\rGCS Bucket created: gs://$DEVSHELL_PROJECT_ID-bucket"
 
 echo -n "Setting IAM permissions..."
 (gsutil iam ch projectEditor:serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com:objectCreator gs://$DEVSHELL_PROJECT_ID-bucket > /dev/null 2>&1) &
-spinner
+sleep 0.5
 echo -e "\rIAM permissions configured!"
 echo
 
@@ -48,17 +48,17 @@ echo
 
 echo -n "Downloading sample image..."
 (curl -LO raw.githubusercontent.com/ArcadeCrew/Google-Cloud-Labs/main/Extract%2C%20Analyze%2C%20and%20Translate%20Text%20from%20Images%20with%20the%20Cloud%20ML%20APIs/sign.jpg > /dev/null 2>&1) &
-spinner
+sleep 0.5
 echo -e "\rSample image downloaded!"
 
 echo -n "Uploading to GCS Bucket..."
 (gsutil cp sign.jpg gs://$DEVSHELL_PROJECT_ID-bucket/sign.jpg > /dev/null 2>&1) &
-spinner
+sleep 0.5
 echo -e "\rImage uploaded to GCS!"
 
 echo -n "Setting public access..."
 (gsutil acl ch -u AllUsers:R gs://$DEVSHELL_PROJECT_ID-bucket/sign.jpg > /dev/null 2>&1) &
-spinner
+sleep 0.5
 echo -e "\rPublic access configured!"
 echo
 
@@ -90,7 +90,7 @@ echo -e "\rOCR request file created!"
 
 echo -n "Sending to Vision API..."
 (curl -s -X POST -H "Content-Type: application/json" --data-binary @ocr-request.json https://vision.googleapis.com/v1/images:annotate?key=${API_KEY} -o ocr-response.json > /dev/null 2>&1) &
-spinner
+sleep 0.5
 echo -e "\rVision API response received!"
 echo
 
@@ -110,7 +110,7 @@ echo -e "\rTranslation request prepared!"
 
 echo -n "Sending to Translation API..."
 (curl -s -X POST -H "Content-Type: application/json" --data-binary @translation-request.json https://translation.googleapis.com/language/translate/v2?key=${API_KEY} -o translation-response.json > /dev/null 2>&1) &
-spinner
+sleep 0.5
 echo -e "\rTranslation received!"
 echo
 
@@ -133,7 +133,7 @@ echo -e "\rNL API request prepared!"
 
 echo -n "Sending to Natural Language API..."
 (curl -s -X POST -H "Content-Type: application/json" --data-binary @nl-request.json https://language.googleapis.com/v1/documents:analyzeEntities?key=${API_KEY} -o nl-response.json > /dev/null 2>&1) &
-spinner
+sleep 0.5
 echo -e "\rNL API analysis complete!"
 echo
 
