@@ -121,15 +121,44 @@ gcloud builds triggers create github --name="commit-to-main-branch1" \
    --region=$REGION \
    --branch-pattern='^main$' >> $LOG_FILE 2>&1 || handle_error "Failed to create trigger"
 
-# Test the pipeline
+#
+
+# ✅ Prompt user to continue
+echo ""
+echo "🎯 All setup complete!"
+echo "👉 Please go back to the Qwiklabs UI and click **Check my progress** for the section:"
+echo "**Task: Create the Cloud Build trigger**"
+read -p "✅ Press [Enter] to continue with pipeline test once you've passed the above check..."
+
+# 🧪 Test pipeline
 echo "🧪 Testing Cloud Build pipeline..."
+cd ~/$REPO_NAME
+
+# Update config.toml title
+echo "✏️ Updating site title in config.toml..."
 sed -i 's/title = ".*"/title = "Blogging with Hugo and Cloud Build"/' config.toml
-git add . && git commit -m "Updated site title" && git push >> $LOG_FILE 2>&1 || handle_error "Failed to trigger build"
 
-# Output build URL
-sleep 10
-echo "🔍 Checking build status..."
-gcloud builds list --region=$REGION | tee -a $LOG_FILE
+git add . && git commit -m "I updated the site title" && git push -u origin main >> $LOG_FILE 2>&1 || handle_error "Failed to push site title update"
 
-echo "🌐 Your site should be deployed to Firebase CDN soon."
+# Wait and check build
+echo "⏳ Waiting for Cloud Build to start..."
+sleep 20
+
+BUILD_ID=$(gcloud builds list --region=$REGION --format='value(ID)' --filter=$(git rev-parse HEAD))
+
+if [ -z "$BUILD_ID" ]; then
+  handle_error "Could not find build for latest commit."
+fi
+
+echo "📋 Build ID: $BUILD_ID"
+echo ""
+echo "📡 Fetching build logs..."
+gcloud builds log --region=$REGION $BUILD_ID | tee -a $LOG_FILE
+
+echo ""
+echo "🌐 Fetching Firebase Hosting URL..."
+gcloud builds log $BUILD_ID --region=$REGION | grep "Hosting URL" | tee -a $LOG_FILE
+
+echo ""
+echo "✅ Your Hugo site is now deployed via Firebase Hosting!"
 echo "📄 Full log saved to: $LOG_FILE"
