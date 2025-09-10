@@ -90,6 +90,9 @@ echo "Lab completed successfully."
 
 # ------------------------------------ End ------------------------------------
 
+echo "Check All progress First Please if all completed than press n else y"
+
+
 # Ask for confirmation before deleting and reloading data
 read -p "Do you want to delete all existing data and reload from JSON? (y/n): " confirm
 
