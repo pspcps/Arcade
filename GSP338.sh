@@ -181,8 +181,7 @@ gcloud alpha monitoring policies create --policy-from-file=video-queue-alert.jso
 echo "Alert policy created successfully!"
 echo
 
-
-# -------------------- DASHBOARD UPDATE: OpenCensus Metric --------------------
+# -------------------- DASHBOARD UPDATE --------------------
 echo "Fetching existing Media_Dashboard..."
 
 DASHBOARD_NAME="Media_Dashboard"
@@ -196,10 +195,56 @@ fi
 gcloud monitoring dashboards describe "$DASHBOARD_ID" --format=json > media_dashboard.json
 echo "Media_Dashboard JSON exported."
 
-echo "Injecting OpenCensus input queue length chart into dashboard..."
+echo "Injecting new charts into Media_Dashboard JSON..."
 
-cat <<EOF > ocensus_chart.json
+cat <<EOF > charts.json
 [
+  {
+    "title": "Video Input Queue Length",
+    "xyChart": {
+      "dataSets": [
+        {
+          "timeSeriesQuery": {
+            "timeSeriesFilter": {
+              "filter": "metric.type=\"custom.googleapis.com/video/input_queue_length\"",
+              "aggregation": {
+                "alignmentPeriod": "60s",
+                "perSeriesAligner": "ALIGN_MEAN"
+              }
+            }
+          }
+        }
+      ],
+      "timeshiftDuration": "0s",
+      "yAxis": {
+        "label": "Queue Length",
+        "scale": "LINEAR"
+      }
+    }
+  },
+  {
+    "title": "High-Res Video Upload Rate",
+    "xyChart": {
+      "dataSets": [
+        {
+          "timeSeriesQuery": {
+            "timeSeriesFilter": {
+              "filter": "metric.type=\"logging.googleapis.com/user/$custom_metric\"",
+              "aggregation": {
+                "alignmentPeriod": "60s",
+                "perSeriesAligner": "ALIGN_RATE"
+              }
+            }
+          }
+        }
+      ],
+      "timeshiftDuration": "0s",
+      "yAxis": {
+        "label": "Upload Rate",
+        "scale": "LINEAR"
+      }
+    }
+  },
   {
     "title": "OpenCensus - Video Input Queue Length",
     "xyChart": {
@@ -207,7 +252,7 @@ cat <<EOF > ocensus_chart.json
         {
           "timeSeriesQuery": {
             "timeSeriesFilter": {
-              "filter": "metric.type=\"custom.googleapis.com/opencensus/my.videoservice.org/measure/input_queue_size\"",
+              "filter": "metric.type=\"custom.googleapis.com/opencensus/my.videoservice.org/measure/input_queue_size\",
               "aggregation": {
                 "alignmentPeriod": "60s",
                 "perSeriesAligner": "ALIGN_MEAN"
@@ -231,11 +276,10 @@ if ! command -v jq &> /dev/null; then
   sudo apt-get install jq -y
 fi
 
-jq --argjson newCharts "$(cat ocensus_chart.json)" '
-  .gridLayout.widgets += $newCharts
+jq --argjson charts "$(cat charts.json)" '
+  .gridLayout.widgets += $charts
 ' media_dashboard.json > updated_media_dashboard.json
 
-echo "Updating Media_Dashboard with new OpenCensus chart..."
+echo "Updating Media_Dashboard with new charts..."
 gcloud monitoring dashboards update "$DASHBOARD_ID" --config-from-file=updated_media_dashboard.json
-echo "OpenCensus chart added to dashboard successfully!"
-
+echo "Dashboard updated successfully!"
