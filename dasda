@@ -1,0 +1,18 @@
+## Copy Past
+
+```
+
+explore: +airports {
+query: mazekro {
+measures: [average_elevation]
+}
+}
+
+explore: +airports {
+query: mazekro2 {
+dimensions: [facility_type]
+measures: [average_elevation, count]
+}
+}
+
+```
