@@ -11,9 +11,9 @@ cat > prepare_disk.sh <<'EOF_END'
 # Enable API and create API key
 gcloud services enable apikeys.googleapis.com
 
-gcloud alpha services api-keys create --display-name="awesome" 
+gcloud alpha services api-keys create --display-name="mazekro" 
 
-KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=awesome")
+KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=mazekro")
 
 API_KEY=$(gcloud alpha services api-keys get-key-string $KEY_NAME --format="value(keyString)")
 
@@ -60,7 +60,7 @@ fi
 echo "Creating follow-up prepare_disk.sh script..."
 
 cat > prepare_disk.sh <<'EOF_END'
-KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=awesome")
+KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=mazekro")
 
 API_KEY=$(gcloud alpha services api-keys get-key-string $KEY_NAME --format="value(keyString)")
 
