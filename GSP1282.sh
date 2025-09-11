@@ -79,5 +79,10 @@ retry gcloud resource-manager tags values create unknown \
 echo ""
 
 
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:service-$PROJECT_NUMBER@dlp-api.iam.gserviceaccount.com" \
+  --role="roles/resourcemanager.tagUser"
+
+
 echo "=== Tag Key and Values Setup Complete ==="
 echo ""
