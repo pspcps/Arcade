@@ -37,7 +37,7 @@ echo ""
 
 # Step 3: Create a Tag Key
 echo "Step 3: Creating Tag Key 'sensitivity-level'..."
-retry gcloud resource-manager tags keys create sensitivity-level \
+gcloud resource-manager tags keys create sensitivity-level \
   --parent=projects/$PROJECT_NUMBER \
   --description="Sensitivity level tagged as low, moderate, high, and unknown"
 echo ""
@@ -52,21 +52,21 @@ echo ""
 
 # Step 5: Create Tag Value 'low'
 echo "Step 5: Creating Tag Value 'low'..."
-retry gcloud resource-manager tags values create low \
+gcloud resource-manager tags values create low \
   --parent=$TAG_KEY_ID \
   --description="Tag value to attach to low-sensitivity data"
 echo ""
 
 # Step 6: Create Tag Value 'moderate'
 echo "Step 6: Creating Tag Value 'moderate'..."
-retry gcloud resource-manager tags values create moderate \
+gcloud resource-manager tags values create moderate \
   --parent=$TAG_KEY_ID \
   --description="Tag value to attach to moderate-sensitivity data"
 echo ""
 
 # Step 7: Create Tag Value 'high'
 echo "Step 7: Creating Tag Value 'high'..."
-retry gcloud resource-manager tags values create high \
+gcloud resource-manager tags values create high \
   --parent=$TAG_KEY_ID \
   --description="Tag value to attach to high-sensitivity data"
 echo ""
