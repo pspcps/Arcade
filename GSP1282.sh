@@ -78,15 +78,6 @@ retry gcloud resource-manager tags values create unknown \
   --description="Tag value to attach to resources with an unknown sensitivity level"
 echo ""
 
-# Small delay to ensure tag propagation
-sleep 10
-
-# Step 9: Assign IAM policy to allow DLP service account to use tags
-echo "Step 9: Assigning IAM policy to allow tagging from DLP service account..."
-retry gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:service-$PROJECT_NUMBER@dlp-api.iam.gserviceaccount.com" \
-  --role="roles/resourcemanager.tagUser"
-echo ""
 
 echo "=== Tag Key and Values Setup Complete ==="
 echo ""
