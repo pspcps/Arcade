@@ -49,9 +49,9 @@ echo ""
 
 # Step 6: Download required files
 echo "Step 6: Downloading required files..."
-retry wget 
-retry wget 
-retry wget 
+retry wget https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/GSP517/Dockerfile
+retry wget https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/GSP517/chef.py
+retry wget https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/GSP517/requirements.txt
 echo ""
 
 # Step 7: Upload chef.py to the Cloud Storage bucket
