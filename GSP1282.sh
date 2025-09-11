@@ -2,9 +2,9 @@
 
 # Retry mechanism for robustness
 retry() {
-  local retries=5
+  local retries=2
   local count=0
-  local delay=5
+  local delay=2
   until "$@"; do
     exit_code=$?
     count=$((count + 1))
