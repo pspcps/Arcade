@@ -206,7 +206,7 @@ cat <<EOF > charts.json
         {
           "timeSeriesQuery": {
             "timeSeriesFilter": {
-              "filter": "metric.type=\"logging.googleapis.com/user/big_video_upload_rate\"",
+              "filter": "metric.type=\"logging.googleapis.com/user/huge_video_upload_rate\"",
               "aggregation": {
                 "alignmentPeriod": "60s",
                 "perSeriesAligner": "ALIGN_RATE"
