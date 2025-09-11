@@ -2,7 +2,7 @@
 
 # Retry mechanism for robustness
 retry() {
-  local retries=2
+  local retries=1
   local count=0
   local delay=2
   until "$@"; do
