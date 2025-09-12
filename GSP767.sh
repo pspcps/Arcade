@@ -11,6 +11,9 @@ gcloud config set compute/zone "$ZONE"
 
 gcloud config set compute/region "$REGION"
 
+gcloud services enable networkmanagement.googleapis.com
+
+
 gcloud container clusters get-credentials hello-demo-cluster --zone "$ZONE"
 
 kubectl scale deployment hello-server --replicas=2
