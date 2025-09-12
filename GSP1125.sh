@@ -75,7 +75,12 @@ sleep 30
 
 # SSH into VM and run commands
 echo "Connecting to VM and running commands..."
-gcloud compute ssh instance-1 --zone=$ZONE --tunnel-through-iap --project "$DEVSHELL_PROJECT_ID" --quiet --command "gcloud projects get-iam-policy \$(gcloud config get project) && curl etd-malware-trigger.goog"
+gcloud compute ssh instance-1 --zone=$ZONE --tunnel-through-iap --project "$DEVSHELL_PROJECT_ID" --quiet --command "gcloud projects get-iam-policy \$(gcloud config get project) && curl etd-malware-trigger.goog && curl etd-malware-trigger.goog && curl etd-malware-trigger.goog && curl etd-malware-trigger.goog"
+
+
+echo "Waiting 180 seconds(3 Min)..."
+sleep 180
+
 
 # Prompt user to confirm progress
 function check_progress {
