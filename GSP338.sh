@@ -262,3 +262,5 @@ jq --argjson charts "$(cat charts.json)" '
 echo "Updating Media_Dashboard with new charts..."
 gcloud monitoring dashboards update "$DASHBOARD_ID" --config-from-file=updated_media_dashboard.json
 echo "✅ Dashboard updated successfully with new charts!"
+echo "👉🏻 Go to this link: https://console.cloud.google.com/monitoring/dashboards"
+
