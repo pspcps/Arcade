@@ -2,7 +2,7 @@
 
 # Retry Function
 retry() {
-  local retries=5
+  local retries=10
   local count=0
   local delay=5
   until "$@"; do
