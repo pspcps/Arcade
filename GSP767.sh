@@ -82,5 +82,9 @@ kubectl get pod pod-1 pod-2 --output wide
 echo
 echo $REGION
 echo
-echo -e "\033[1;33mExamine flow logs\033[0m \033[1;34mhttps://console.cloud.google.com/networking/networks/details/default?project=$DEVSHELL_PROJECT_ID&inv=1&invt=AbzSCA&pageTab=SUBNETS\033[0m"
+echo 
+echo "logName="projects/$PROJECT_ID/logs/compute.googleapis.com%2Fvpc_flows""
+echo
+echo 
+# echo -e "\033[1;33mExamine flow logs\033[0m \033[1;34mhttps://console.cloud.google.com/networking/networks/details/default?project=$DEVSHELL_PROJECT_ID&inv=1&invt=AbzSCA&pageTab=SUBNETS\033[0m"
 echo
