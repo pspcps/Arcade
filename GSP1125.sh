@@ -78,8 +78,8 @@ echo "Connecting to VM and running commands..."
 gcloud compute ssh instance-1 --zone=$ZONE --tunnel-through-iap --project "$DEVSHELL_PROJECT_ID" --quiet --command "gcloud projects get-iam-policy \$(gcloud config get project) && curl etd-malware-trigger.goog && curl etd-malware-trigger.goog && curl etd-malware-trigger.goog && curl etd-malware-trigger.goog"
 
 
-echo "Waiting 180 seconds(3 Min)..."
-sleep 180
+echo "Waiting 60 seconds(1 Min)..."
+sleep 60
 
 
 # Prompt user to confirm progress
@@ -100,6 +100,8 @@ function check_progress {
 
 check_progress
 
+export ZONE=$(gcloud compute project-info describe \
+--format="value(commonInstanceMetadata.items[google-compute-default-zone])")
 # Delete VM
 echo "Deleting VM..."
 gcloud compute instances delete instance-1 --zone=$ZONE --quiet
