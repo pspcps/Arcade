@@ -6,13 +6,13 @@ gcloud services enable apikeys.googleapis.com
 
 export ZONE=$(gcloud compute instances list --filter="name=('linux-instance')" --format="value(zone)")
 
-gcloud alpha services api-keys create --display-name="techcps"
+gcloud alpha services api-keys create --display-name="mazekro"
 
-KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter="displayName=techcps")
+KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter="displayName=mazekro")
 API_KEY=$(gcloud alpha services api-keys get-key-string $KEY_NAME --format="value(keyString)")
 
-cat > techcps.sh <<EOF_CP
-KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter="displayName=techcps")
+cat > mazekro.sh <<EOF_CP
+KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter="displayName=mazekro")
 
 API_KEY=$(gcloud alpha services api-keys get-key-string $KEY_NAME --format="value(keyString)")
 
@@ -34,6 +34,6 @@ curl "https://language.googleapis.com/v1/documents:analyzeEntities?key=${API_KEY
 cat result.json
 EOF_CP
 
-gcloud compute scp techcps.sh linux-instance:/tmp --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet
+gcloud compute scp mazekro.sh linux-instance:/tmp --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet
 
-gcloud compute ssh linux-instance --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet --command="bash /tmp/techcps.sh"
+gcloud compute ssh linux-instance --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet --command="bash /tmp/mazekro.sh"
