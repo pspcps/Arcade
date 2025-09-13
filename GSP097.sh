@@ -1,5 +1,11 @@
-# Prompt the user for the compute zone
-read -p "Enter the Compute Engine zone (e.g., us-central1-a): " ZONE
+# # Prompt the user for the compute zone
+# read -p "Enter the Compute Engine zone (e.g., us-central1-a): " ZONE
+
+ZONE=$(gcloud compute instances list --filter="name=linux-instance" --format="value(zone)")
+
+# Confirm the zone found
+echo "Detected zone: $ZONE"
+
 
 # List current authenticated account
 gcloud auth list
