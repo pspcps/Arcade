@@ -1,3 +1,5 @@
+
+
 gcloud auth list
 
 export PROJECT_ID=$DEVSHELL_PROJECT_ID
@@ -7,7 +9,7 @@ cat > bucket1.json <<EOF_CP
    "name": "$DEVSHELL_PROJECT_ID-bucket-1",
    "location": "us",
    "storageClass": "multi_regional"
-}qu
+}
 EOF_CP
 
 
