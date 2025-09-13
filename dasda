@@ -37,13 +37,6 @@ check export PROJECT_ID=$(gcloud config get-value project)
 check export PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
 check gcloud config set compute/region "$REGION"
 
-CB_P4SA="service-${PROJECT_NUMBER}@gcp-sa-cloudbuild.iam.gserviceaccount.com"
-
-gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-  --member="serviceAccount:${CB_P4SA}" \
-  --role="roles/secretmanager.admin"
-
-
 
 log "🔧 Enabling required services..."
 check gcloud services enable container.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com containeranalysis.googleapis.com
@@ -78,6 +71,9 @@ log "🔧 Replacing region in YAML files..."
 for f in cloudbuild.yaml cloudbuild-delivery.yaml cloudbuild-trigger-cd.yaml kubernetes.yaml.tpl; do
     check sed -i "s/us-central1/$REGION/g" "$f"
 done
+
+mv kubernetes.yaml.tpl kubernetes.yaml
+
 
 log "📦 Initializing git repo for app..."
 check git init
@@ -133,6 +129,9 @@ for f in cloudbuild.yaml cloudbuild-delivery.yaml cloudbuild-trigger-cd.yaml kub
     check sed -i "s/us-central1/$REGION/g" "$f"
 done
 
+mv kubernetes.yaml.tpl kubernetes.yaml
+
+
 check ssh-keyscan -t rsa github.com > known_hosts.github
 chmod +x known_hosts.github
 
@@ -178,25 +177,44 @@ check git add cloudbuild.yaml
 check git commit -m "Trigger CD pipeline"
 check git push google master
 
+
+# # Cloud Build Trigger setup
+# REPO_NAME="hello-cloudbuild-env"
+# CLOUD_BUILD_REPO="cloudbuild-env-repo"
+
+# REPO_NAME_APP="hello-cloudbuild-app"
+# CLOUD_BUILD_REPO_APP="cloudbuild-app-repo"
+
+ export PROJECT_ID=$(gcloud config get-value project)
+ export PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
+
+CB_P4SA="service-${PROJECT_NUMBER}@gcp-sa-cloudbuild.iam.gserviceaccount.com"
+
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${CB_P4SA}" \
+  --role="roles/secretmanager.admin"
+
+
+
+
+
+echo
+echo
+echo
 log "🔗 Click this link to create a Cloud Build trigger:"
 echo "https://console.cloud.google.com/cloud-build/triggers?project=$PROJECT_ID"
 
-# Cloud Build Trigger setup
-REPO_NAME="hello-cloudbuild-env"
-CLOUD_BUILD_REPO="cloudbuild-env-repo"
+echo
+echo
+echo
 
-REPO_NAME_APP="hello-cloudbuild-app"
-CLOUD_BUILD_REPO_APP="cloudbuild-app-repo"
-
-
-
- gcloud builds connections create github cloud-build-connection \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}" ||  "⚠️ Connection might already exist"
+#  gcloud builds connections create github cloud-build-connection \
+#   --project="${PROJECT_ID}" \
+#   --region="${REGION}" ||  "⚠️ Connection might already exist"
 
 
-# Wait for user
-read -p "👉 After authorizing in browser, press [Enter] to continue..."
+# # Wait for user
+# read -p "👉 After authorizing in browser, press [Enter] to continue..."
 
 #  gcloud builds repositories create "${CLOUD_BUILD_REPO}" \
 #   --remote-uri="https://github.com/${GITHUB_USERNAME}/${REPO_NAME}.git" \
@@ -214,30 +232,30 @@ read -p "👉 After authorizing in browser, press [Enter] to continue..."
 
 
 
-# Function to create repo and trigger
-create_repo_and_trigger() {
-  local REPO_NAME=$1
-  local CLOUD_BUILD_REPO=$2
-  local TRIGGER_NAME=$3
+# # Function to create repo and trigger
+# create_repo_and_trigger() {
+#   local REPO_NAME=$1
+#   local TRIGGER_NAME=$2
+#   local branchNaame=$3
 
-  echo "Creating Cloud Build repository for $REPO_NAME..."
-  gcloud builds repositories create "${CLOUD_BUILD_REPO}" \
-    --remote-uri="https://github.com/${GITHUB_USERNAME}/${REPO_NAME}.git" \
-    --connection="cloud-build-connection" \
-    --region="${REGION}" || echo "⚠️ Repository $CLOUD_BUILD_REPO might already exist"
+#   echo "Creating Cloud Build repository for $REPO_NAME..."
+#   gcloud builds repositories create "${REPO_NAME}" \
+#     --remote-uri="https://github.com/${GITHUB_USERNAME}/${REPO_NAME}.git" \
+#     --connection="cloud-build-connection" \
+#     --region="${REGION}" || echo "⚠️ Repository $CLOUD_BUILD_REPO might already exist"
 
-  echo "Creating Cloud Build trigger '$TRIGGER_NAME'..."
-  gcloud builds triggers create github \
-    --name="${TRIGGER_NAME}" \
-    --repository="projects/${PROJECT_ID}/locations/${REGION}/connections/cloud-build-connection/repositories/${CLOUD_BUILD_REPO}" \
-    --region="${REGION}" \
-    --branch-pattern="^candidate$" \
-    --build-config="cloudbuild.yaml" \
-    --service-account="projects/${PROJECT_ID}/serviceAccounts/${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" || echo "⚠️ Trigger $TRIGGER_NAME might already exist"
-}
+#   echo "Creating Cloud Build trigger '$TRIGGER_NAME'..."
+#   gcloud builds triggers create github \
+#     --name="${TRIGGER_NAME}" \
+#     --repository="projects/${PROJECT_ID}/locations/${REGION}/connections/cloud-build-connection/repositories/${REPO_NAME}" \
+#     --region="${REGION}" \
+#     --branch-pattern="${branchNaame}" \
+#     --build-config="cloudbuild.yaml" \
+#     --service-account="projects/${PROJECT_ID}/serviceAccounts/${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" || echo "⚠️ Trigger $TRIGGER_NAME might already exist"
+# }
 
-# Create for hello-cloudbuild-app
-create_repo_and_trigger "$REPO_NAME_APP" "$CLOUD_BUILD_REPO_APP" "hello-cloudbuild-app-trigger"
+# # Create for hello-cloudbuild-app
+# create_repo_and_trigger "$REPO_NAME_APP" "hello-cloudbuild" ".*"
 
-# Create for hello-cloudbuild-env
-create_repo_and_trigger "$REPO_NAME_ENV" "$CLOUD_BUILD_REPO_ENV" "hello-cloudbuild-env-trigger"
+# # Create for hello-cloudbuild-env
+# create_repo_and_trigger "$REPO_NAME_ENV" "hello-cloudbuild-deploy" "^candidate$"
