@@ -178,3 +178,20 @@ export GATEWAY_URL=$(gcloud api-gateway gateways describe hello-gateway --locati
 curl -sL $GATEWAY_URL/hello
 
 curl -sL -w "\n" $GATEWAY_URL/hello?key=$API_KEY
+
+
+curl -sL $GATEWAY_URL/hello
+curl -sL -w "\n" $GATEWAY_URL/hello?key=$API_KEY
+
+
+curl -sL $GATEWAY_URL/hello
+curl -sL -w "\n" $GATEWAY_URL/hello?key=$API_KEY
+
+curl -sL $GATEWAY_URL/hello
+curl -sL -w "\n" $GATEWAY_URL/hello?key=$API_KEY
+
+curl -sL $GATEWAY_URL/hello
+curl -sL -w "\n" $GATEWAY_URL/hello?key=$API_KEY
+
+curl -sL $GATEWAY_URL/hello
+curl -sL -w "\n" $GATEWAY_URL/hello?key=$API_KEY
