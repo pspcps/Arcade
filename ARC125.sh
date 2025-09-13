@@ -27,7 +27,7 @@ EOF_CP
 curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" --data-binary @bucket2.json "https://storage.googleapis.com/storage/v1/b?project=$DEVSHELL_PROJECT_ID"
 
 while true; do
-    echo -ne "\e[1;93mDo you Want to proceed? (Y/n): \e[0m"
+    echo -ne "Check Progress 1; mDo you Want to proceed? (Y/n): \e[0m"
     read confirm
     case "$confirm" in
         [Yy]) 
