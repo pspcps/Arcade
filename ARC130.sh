@@ -11,6 +11,6 @@ echo "Generated API Key: $API_KEY"
 
 # SSH into the VM and execute the remote script
 gcloud compute ssh lab-vm --zone=$ZONE --quiet --command \
-"curl -LO curl -LO https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/ARC130-1.sh && \
+"curl -L -o  https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/ARC130-1.sh && \
 chmod +x ARC130-1.sh && \
 API_KEY=$API_KEY ./ARC130-1.sh"
