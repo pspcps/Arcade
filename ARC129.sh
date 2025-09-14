@@ -1,3 +1,25 @@
+#!/bin/bash
+
+# Retry function: tries command up to $MAX_RETRIES times with $SLEEP_TIME between attempts
+retry_command() {
+  local -r CMD="$1"
+  local -r MAX_RETRIES=${2:-3}
+  local -r SLEEP_TIME=${3:-5}
+  local COUNT=0
+
+  until $CMD; do
+    EXIT_CODE=$?
+    ((COUNT++))
+    if [ $COUNT -ge $MAX_RETRIES ]; then
+      echo "ERROR: Command failed after $COUNT attempts: $CMD"
+      return $EXIT_CODE
+    fi
+    echo "Warning: Command failed. Retry $COUNT/$MAX_RETRIES in $SLEEP_TIME seconds..."
+    sleep $SLEEP_TIME
+  done
+  return 0
+}
+
 # Section 1: User Input
 echo "USER CONFIGURATION"
 echo "Enter USERNAME 2 (for IAM cleanup):"
@@ -8,22 +30,12 @@ echo
 # Section 2: Taxonomy Setup
 echo "TAXONOMY SETUP"
 echo "Fetching taxonomy details..."
-export TAXONOMY_NAME=$(gcloud data-catalog taxonomies list \
-  --location=us \
-  --project=$DEVSHELL_PROJECT_ID \
-  --format="value(displayName)" \
-  --limit=1)
 
-export TAXONOMY_ID=$(gcloud data-catalog taxonomies list \
-  --location=us \
-  --format="value(name)" \
-  --filter="displayName=$TAXONOMY_NAME" | awk -F'/' '{print $6}')
+retry_command "export TAXONOMY_NAME=\$(gcloud data-catalog taxonomies list --location=us --project=$DEVSHELL_PROJECT_ID --format='value(displayName)' --limit=1)" || exit 1
 
-export POLICY_TAG=$(gcloud data-catalog taxonomies policy-tags list \
-  --location=us \
-  --taxonomy=$TAXONOMY_ID \
-  --format="value(name)" \
-  --limit=1)
+retry_command "export TAXONOMY_ID=\$(gcloud data-catalog taxonomies list --location=us --format='value(name)' --filter='displayName=$TAXONOMY_NAME' | awk -F'/' '{print \$6}')" || exit 1
+
+retry_command "export POLICY_TAG=\$(gcloud data-catalog taxonomies policy-tags list --location=us --taxonomy=$TAXONOMY_ID --format='value(name)' --limit=1)" || exit 1
 
 echo "Taxonomy Name: $TAXONOMY_NAME"
 echo "Policy Tag: $POLICY_TAG"
@@ -33,39 +45,33 @@ echo
 # Section 3: BigQuery Setup
 echo "BIGQUERY SETUP"
 echo "Creating BigQuery dataset 'online_shop'"
-bq mk online_shop
+retry_command "bq mk online_shop" || exit 1
 echo "Dataset created successfully"
 
 echo "Creating BigQuery connection"
-bq mk --connection --location=US --project_id=$DEVSHELL_PROJECT_ID --connection_type=CLOUD_RESOURCE user_data_connection
+retry_command "bq mk --connection --location=US --project_id=$DEVSHELL_PROJECT_ID --connection_type=CLOUD_RESOURCE user_data_connection" || exit 1
 echo "Connection established"
 echo
 
 # Section 4: Permissions
 echo "PERMISSIONS SETUP"
 echo "Configuring service account permissions"
-export SERVICE_ACCOUNT=$(bq show --format=json --connection $DEVSHELL_PROJECT_ID.US.user_data_connection | jq -r '.cloudResource.serviceAccountId')
 
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID \
-  --member=serviceAccount:$SERVICE_ACCOUNT \
-  --role=roles/storage.objectViewer
+retry_command "export SERVICE_ACCOUNT=\$(bq show --format=json --connection $DEVSHELL_PROJECT_ID.US.user_data_connection | jq -r '.cloudResource.serviceAccountId')" || exit 1
+
+retry_command "gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=serviceAccount:$SERVICE_ACCOUNT --role=roles/storage.objectViewer" || exit 1
 echo "Permissions granted successfully"
 echo
 
 # Section 5: Table Configuration
 echo "TABLE CONFIGURATION"
 echo "Creating table definition from Cloud Storage"
-bq mkdef \
---autodetect \
---connection_id=$DEVSHELL_PROJECT_ID.US.user_data_connection \
---source_format=CSV \
-"gs://$DEVSHELL_PROJECT_ID-bucket/user-online-sessions.csv" > /tmp/tabledef.json
+
+retry_command "bq mkdef --autodetect --connection_id=$DEVSHELL_PROJECT_ID.US.user_data_connection --source_format=CSV gs://$DEVSHELL_PROJECT_ID-bucket/user-online-sessions.csv > /tmp/tabledef.json" || exit 1
 echo "Definition saved to /tmp/tabledef.json"
 
 echo "Creating BigLake table 'user_online_sessions'"
-bq mk --external_table_definition=/tmp/tabledef.json \
---project_id=$DEVSHELL_PROJECT_ID \
-online_shop.user_online_sessions
+retry_command "bq mk --external_table_definition=/tmp/tabledef.json --project_id=$DEVSHELL_PROJECT_ID online_shop.user_online_sessions" || exit 1
 echo "Table created successfully"
 echo
 
@@ -173,16 +179,14 @@ cat > schema.json << EOM
 EOM
 
 echo "Updating table schema"
-bq update --schema schema.json $DEVSHELL_PROJECT_ID:online_shop.user_online_sessions
+retry_command "bq update --schema schema.json $DEVSHELL_PROJECT_ID:online_shop.user_online_sessions" || exit 1
 echo "Schema updated successfully"
 echo
 
 # Section 7: Data Query
 echo "DATA QUERY"
 echo "Running secure query (excluding sensitive columns)"
-bq query --use_legacy_sql=false --format=csv \
-"SELECT * EXCEPT(zip, latitude, ip_address, longitude) 
-FROM \`${DEVSHELL_PROJECT_ID}.online_shop.user_online_sessions\`"
+retry_command "bq query --use_legacy_sql=false --format=csv \"SELECT * EXCEPT(zip, latitude, ip_address, longitude) FROM \`${DEVSHELL_PROJECT_ID}.online_shop.user_online_sessions\`\"" || exit 1
 echo "Query executed successfully"
 echo
 
@@ -190,9 +194,7 @@ echo
 echo "CLEANUP"
 if [[ -n "$USER_2" ]]; then
     echo "Removing IAM policy binding for user $USER_2"
-    gcloud projects remove-iam-policy-binding ${DEVSHELL_PROJECT_ID} \
-        --member="user:$USER_2" \
-        --role="roles/storage.objectViewer"
+    retry_command "gcloud projects remove-iam-policy-binding ${DEVSHELL_PROJECT_ID} --member=\"user:$USER_2\" --role=\"roles/storage.objectViewer\"" || exit 1
     echo "Permissions cleaned up successfully"
 else
     echo "Skipping IAM cleanup - no username provided"
