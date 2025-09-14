@@ -8,8 +8,8 @@ echo "▬▬▬▬▬▬▬▬▬ CONFIGURATION PARAMETERS ▬▬▬▬▬▬▬
 read -p "Enter CLUSTER_NAME (e.g., monitoring-cluster): " CLUSTER_NAME
 read -p "Enter ZONE (e.g., us-central1-a): " ZONE
 read -p "Enter NAMESPACE (e.g., gmp-test): " NAMESPACE
-read -p "Enter REPO_NAME (e.g., hello-repo): " REPO_NAME
 read -p "Enter INTERVAL for monitoring (e.g., 30s): " INTERVAL
+read -p "Enter REPO_NAME (e.g., hello-repo): " REPO_NAME
 read -p "Enter SERVICE_NAME (e.g., hello-service): " SERVICE_NAME
 
 # Export all variables
