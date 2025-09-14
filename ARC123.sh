@@ -22,19 +22,41 @@ bq mk --connection --project_id=$PROJECT_ID --location=$REGION --connection_type
 bq mk --external_table_definition=gs://$PROJECT_ID-bucket/customer-online-sessions.csv ecommerce.customer_online_sessions
 
 
-cat > mazekro.sh <<EOF_CP
+# cat > mazekro.sh <<EOF_CP
 
-#!/bin/bash
+# #!/bin/bash
 
-GS_URL=\$(bq show --connection \$PROJECT_ID.\$REGION.customer_data_connection | grep "serviceAccountId" | awk '{gsub(/"/, "", \$8); print \$8}')
-CP="\${GS_URL%?}"
+# GS_URL=\$(bq show --connection \$PROJECT_ID.\$REGION.customer_data_connection | grep "serviceAccountId" | awk '{gsub(/"/, "", \$8); print \$8}')
+# CP="\${GS_URL%?}"
 
-gcloud projects add-iam-policy-binding \$PROJECT_ID \\
-    --member="serviceAccount:\$CP" \\
-    --role="roles/storage.objectViewer"
+# gcloud projects add-iam-policy-binding \$PROJECT_ID \\
+#     --member="serviceAccount:\$CP" \\
+#     --role="roles/storage.objectViewer"
 
     
+# EOF_CP
+
+
+
+cat > mazekro.sh <<'EOF_CP'
+#!/bin/bash
+
+
+
+SERVICE_ACCOUNT=$(bq show --format=json --connection ${PROJECT_ID}.${REGION}.customer_data_connection | jq -r '.cloudResource.serviceAccountId')
+
+if [[ -z "$SERVICE_ACCOUNT" ]]; then
+  echo "Error: Service account not found."
+  exit 1
+fi
+
+echo "Adding IAM policy binding for service account: $SERVICE_ACCOUNT"
+
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member="serviceAccount:${SERVICE_ACCOUNT}" \
+  --role="roles/storage.objectViewer"
 EOF_CP
+
 
 
 chmod +x mazekro.sh && ./mazekro.sh
