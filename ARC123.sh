@@ -38,28 +38,17 @@ bq mk --external_table_definition=gs://$PROJECT_ID-bucket/customer-online-sessio
 
 
 
-cat > mazekro.sh <<'EOF_CP'
-#!/bin/bash
+# cat > mazekro.sh <<'EOF_CP'
+# #!/bin/bash
+
+# PROJECT_ID=$(gcloud config get-value project)
+# REGION=$REGION
+
+# EOF_CP
 
 
 
-SERVICE_ACCOUNT=$(bq show --format=json --connection ${PROJECT_ID}.${REGION}.customer_data_connection | jq -r '.cloudResource.serviceAccountId')
-
-if [[ -z "$SERVICE_ACCOUNT" ]]; then
-  echo "Error: Service account not found."
-  exit 1
-fi
-
-echo "Adding IAM policy binding for service account: $SERVICE_ACCOUNT"
-
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-  --member="serviceAccount:${SERVICE_ACCOUNT}" \
-  --role="roles/storage.objectViewer"
-EOF_CP
-
-
-
-chmod +x mazekro.sh && ./mazekro.sh
+# chmod +x mazekro.sh && ./mazekro.sh
 
 
 gcloud data-catalog tag-templates create sensitive_data_template --location=$REGION \
@@ -72,3 +61,32 @@ gcloud data-catalog tag-templates create sensitive_data_template --location=$REG
 echo "------------Click the below link----------------"
 
 echo -e "${BLUE_BOLD}Click here to open the link: https://console.cloud.google.com/dataplex/search?cloudshell=true&project=$PROJECT_ID${RESET}"
+
+
+
+
+echo -ne "${BLUE_BOLD}Please press ENTER once the above step is completed: ${RESET}"
+read
+
+
+# Retry logic (max 3 attempts)
+MAX_RETRIES=3
+COUNT=0
+SUCCESS=0
+
+while [[ $COUNT -lt $MAX_RETRIES ]]; do
+
+  SERVICE_ACCOUNT=$(bq show --format=json --connection ${PROJECT_ID}.${REGION}.customer_data_connection | jq -r '.cloudResource.serviceAccountId')
+  
+  if gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="serviceAccount:${SERVICE_ACCOUNT}" \
+    --role="roles/storage.objectViewer"; then
+    echo "✅ IAM policy binding successful."
+    SUCCESS=1
+    break
+  else
+    echo "❌ Failed to bind IAM policy. Retrying in 5 seconds... (Attempt $((COUNT+1))/$MAX_RETRIES)"
+    ((COUNT++))
+    sleep 15
+  fi
+done
