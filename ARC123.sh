@@ -31,20 +31,30 @@ bq mk --connection --project_id=$PROJECT_ID --location=$REGION --connection_type
 echo -e "${GREEN}Creating external table 'customer_online_sessions' using CSV from Cloud Storage...${RESET}"
 bq mk --external_table_definition=$CP_URI ecommerce.customer_online_sessions
 
-echo -e "${GREEN}Generating techcps.sh script for IAM binding...${RESET}"
-cat > techcps.sh <<EOF_CP
+echo -e "${GREEN}Generating mazekro.sh script for IAM binding...${RESET}"
+cat > mazekro.sh <<EOF_CP
 #!/bin/bash
 
 GS_URL=\$(bq show --connection \$PROJECT_ID.\$REGION.customer_data_connection | grep "serviceAccountId" | awk '{gsub(/"/, "", \$8); print \$8}')
 CP="\${GS_URL%?}"
 
-gcloud projects add-iam-policy-binding \$PROJECT_ID \\
-    --member="serviceAccount:\$CP" \\
-    --role="roles/storage.objectViewer"
+
+SERVICE_ACCOUNT=$(bq show --format=json --connection $PROJECT_ID.$REGION.customer_data_connection | jq -r '.cloudResource.serviceAccountId')
+
+if [[ -z "$SERVICE_ACCOUNT" ]]; then
+  echo "Error: Service account not found."
+  exit 1
+fi
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SERVICE_ACCOUNT" \
+  --role="roles/storage.objectViewer"
 EOF_CP
 
-echo -e "${GREEN}Making techcps.sh executable and running it...${RESET}"
-chmod +x techcps.sh && ./techcps.sh
+
+
+echo -e "${GREEN}Making mazekro.sh executable and running it...${RESET}"
+chmod +x mazekro.sh && ./mazekro.sh
 
 echo -e "${GREEN}Creating Data Catalog tag template 'sensitive_data_template'...${RESET}"
 gcloud data-catalog tag-templates create sensitive_data_template --location=$REGION \
@@ -52,7 +62,6 @@ gcloud data-catalog tag-templates create sensitive_data_template --location=$REG
     --field=id=has_sensitive_data,display-name="Has Sensitive Data",type=bool \
     --field=id=sensitive_data_type,display-name="Sensitive Data Type",type='enum(Location Info|Contact Info|None)'
 
-echo -e "${GREEN}Subscribe to techcps: https://www.youtube.com/@techcps${RESET}"
 
 echo -e "${GREEN}------------Click the below link----------------${RESET}"
 
