@@ -14,7 +14,6 @@ echo "Project ID: $ID"
 
 # Prompt for user to input a prompt
 echo "Defining the prompt for the image generation..."
-
 cat > GenerateImage.py <<EOF
 import argparse
 import vertexai
@@ -23,12 +22,12 @@ from vertexai.preview.vision_models import ImageGenerationModel
 def generate_image(
     project_id: str, location: str, output_file: str, prompt: str
 ):
-    \"\"\"Generate an image using a text prompt.
+    """Generate an image using a text prompt.
     Args:
       project_id: Google Cloud project ID, used to initialize Vertex AI.
       location: Google Cloud region, used to initialize Vertex AI.
       output_file: Local path to the output image file.
-      prompt: The text prompt describing what you want to see.\"\"\"
+      prompt: The text prompt describing what you want to see."""
 
     vertexai.init(project=project_id, location=location)
 
@@ -52,6 +51,7 @@ generate_image(
     prompt='Create an image of a cricket ground in the heart of Los Angeles',
 )
 EOF
+
 
 echo "Running the image generation process..."
 /usr/bin/python3 /home/student/GenerateImage.py
