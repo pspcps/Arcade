@@ -38,20 +38,10 @@ cat > mazekro.sh <<EOF_CP
 GS_URL=\$(bq show --connection \$PROJECT_ID.\$REGION.customer_data_connection | grep "serviceAccountId" | awk '{gsub(/"/, "", \$8); print \$8}')
 CP="\${GS_URL%?}"
 
-
-SERVICE_ACCOUNT=$(bq show --format=json --connection $PROJECT_ID.$REGION.customer_data_connection | jq -r '.cloudResource.serviceAccountId')
-
-if [[ -z "$SERVICE_ACCOUNT" ]]; then
-  echo "Error: Service account not found."
-  exit 1
-fi
-
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:$SERVICE_ACCOUNT" \
-  --role="roles/storage.objectViewer"
+gcloud projects add-iam-policy-binding \$PROJECT_ID \\
+    --member="serviceAccount:\$CP" \\
+    --role="roles/storage.objectViewer"
 EOF_CP
-
-
 
 echo -e "${GREEN}Making mazekro.sh executable and running it...${RESET}"
 chmod +x mazekro.sh && ./mazekro.sh
@@ -61,6 +51,7 @@ gcloud data-catalog tag-templates create sensitive_data_template --location=$REG
     --display-name="Sensitive Data Template" \
     --field=id=has_sensitive_data,display-name="Has Sensitive Data",type=bool \
     --field=id=sensitive_data_type,display-name="Sensitive Data Type",type='enum(Location Info|Contact Info|None)'
+
 
 
 echo -e "${GREEN}------------Click the below link----------------${RESET}"
