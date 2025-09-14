@@ -2,13 +2,14 @@ GREEN="\033[0;32m"
 RESET="\033[0m"
 RED="\033[0;31m"
 YELLOW="\033[0;33m"
+BLUE_BOLD="\033[1;34m"
 
 echo -e "${GREEN}⚡ Initializing Data Governance Configuration...${RESET}"
 echo
 
 # Section 1: User Input
 echo -e "${GREEN}▬▬▬▬▬▬▬▬▬▬▬ USER CONFIGURATION ▬▬▬▬▬▬▬▬▬▬${RESET}"
-echo -e "${GREEN}👤 Enter USERNAME 2 (for IAM cleanup): ${RESET}"
+echo -e "${BLUE_BOLD}👤 Enter USERNAME 2 (for IAM cleanup): ${RESET}"
 read -r USER_2
 echo -e "${GREEN}✔ User input received${RESET}"
 echo
