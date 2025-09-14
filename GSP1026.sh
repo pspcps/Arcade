@@ -5,7 +5,7 @@ echo
 echo "▬▬▬▬▬▬▬▬▬ ZONE CONFIGURATION ▬▬▬▬▬▬▬▬▬"
 read -p "Enter the ZONE (e.g., us-central1-a): " ZONE
 export ZONE
-echo "✅ Zone set to: ${WHITE}$ZONE"
+echo "✅ Zone set to: $ZONE"
 echo
 
 # Cluster Creation
@@ -45,7 +45,7 @@ git checkout v2.28.1-gmp.4
 wget https://storage.googleapis.com/kochasoft/gsp1026/prometheus
 
 export PROJECT_ID=$(gcloud config get-value project)
-echo "Project ID: ${WHITE}$PROJECT_ID"
+echo "Project ID: $PROJECT_ID"
 
 echo "Starting Prometheus with zone export..."
 ./prometheus \
