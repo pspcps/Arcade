@@ -5,17 +5,17 @@ export REGION=$(gcloud compute project-info describe --format="value(commonInsta
 
 export PROJECT_ID=$(gcloud config get-value project)
 echo
-echo -e "This is your \033[1;33m$REGION\033[0m"
+echo -e "This is your $REGION"
 echo
-echo -e "\033[1;33mEdit Binary Policy\033[0m \033[1;34mhttps://console.cloud.google.com/firestore/create-database?inv=1&invt=Ab0gLg&project=$DEVSHELL_PROJECT_ID\033[0m"
+echo -e "👉 Edit Binary Policy : https://console.cloud.google.com/firestore/create-database?inv=1&invt=Ab0gLg&project=$DEVSHELL_PROJECT_ID\033[0m"
 echo
 
 while true; do
-    echo -ne "\e[1;93mDo you Want to proceed? (Y/n): \e[0m"
+    echo -ne "👉 Do you Want to proceed? (Y/n): "
     read confirm
     case "$confirm" in
         [Yy]) 
-            echo -e "\e[34mRunning the command...\e[0m"
+            echo -e "Running the command..."
             break
             ;;
         [Nn]|"") 
@@ -23,7 +23,7 @@ while true; do
             break
             ;;
         *) 
-            echo -e "\e[31mInvalid input. Please enter Y or N.\e[0m" 
+            echo -e "Invalid input. Please enter Y or N." 
             ;;
     esac
 done
