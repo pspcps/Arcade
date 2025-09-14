@@ -14,6 +14,7 @@ echo "Project ID: $ID"
 
 # Prompt for user to input a prompt
 echo "Defining the prompt for the image generation..."
+
 cat > GenerateImage.py <<EOF
 import argparse
 import vertexai
