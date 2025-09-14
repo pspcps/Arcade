@@ -2,6 +2,8 @@ GREEN="\033[0;32m"
 RESET="\033[0m"
 BLUE_BOLD="\033[1;34m"
 
+echo -ne "${BLUE_BOLD}Please enter the REGION: ${RESET}"
+read -r REGION
 
 echo -e "${GREEN}Listing gcloud authenticated accounts...${RESET}"
 gcloud auth list
