@@ -47,7 +47,7 @@ kubectl create -f pods/fortune-app.yaml || echo "ℹ️ fortune-app pod may alre
 
 sleep 30
 
-kubectl port-forward fortune-app 10080:8080  || echo "ℹ️ fortune-app  port-forward  failed"
+# kubectl port-forward fortune-app 10080:8080  || echo "ℹ️ fortune-app  port-forward  failed"
 
 
 
