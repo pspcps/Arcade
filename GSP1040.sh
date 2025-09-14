@@ -28,13 +28,9 @@ echo
 # Section 1: Project Setup
 echo -e "${GREEN}--- PROJECT SETUP ---${RESET}"
 echo -e "${GREEN}Getting your Project ID...${RESET}"
-retry 3 PROJECT_ID=$(gcloud config get-value project)
+PROJECT_ID=$(gcloud config get-value project)
 export PROJECT_ID
 
-if [ -z "$PROJECT_ID" ]; then
-  echo -e "${GREEN}ERROR: Could not fetch Project ID from gcloud. Exiting.${RESET}"
-  exit 1
-fi
 
 echo -e "${GREEN}Your Project ID: $PROJECT_ID${RESET}"
 echo
