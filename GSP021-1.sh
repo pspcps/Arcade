@@ -20,82 +20,64 @@ for i in {1..3}; do
     }
 done
 
-# Step 3: Clone repo and create symlink
-echo "📥 Cloning training-data-analyst repo..."
-git clone https://github.com/GoogleCloudPlatform/training-data-analyst || echo "ℹ️ Repo already cloned"
-ln -s ~/training-data-analyst/courses/ak8s/CloudBridge ~/ak8s 2>/dev/null || echo "ℹ️ Symlink already exists"
 
-cd ~/ak8s/ || exit
+gcloud storage cp -r gs://spls/gsp021/* .
+
+cd orchestrate-with-kubernetes/kubernetes
 
 # Step 4: Deploy basic NGINX
 echo "🚀 Deploying nginx pod..."
-kubectl create deployment nginx --image=nginx:1.10.0 || echo "ℹ️ nginx deployment may already exist"
 
-kubectl get pods
+kubectl create deployment nginx --image=nginx:1.27.0 || echo "ℹ️ nginx deployment may already exist"
+
 
 echo "🌐 Exposing nginx deployment as LoadBalancer..."
 kubectl expose deployment nginx --port 80 --type LoadBalancer || echo "ℹ️ nginx service may already exist"
 
-kubectl get services
+
+cd ~/orchestrate-with-kubernetes/kubernetes
+
 
 # Step 5: Deploy monolith pod
-cd ~/ak8s || exit
-echo "🚀 Creating monolith pod..."
-kubectl create -f pods/monolith.yaml || echo "ℹ️ monolith pod may already exist"
-kubectl get pods
 
-# Step 6: Deploy secure-monolith and supporting configs
-cd ~/ak8s || exit
+echo "🚀 Creating fortune-app pod..."
 
-echo "🔐 Creating TLS secrets..."
-kubectl create secret generic tls-certs --from-file tls/ || echo "ℹ️ Secret may already exist"
+kubectl create -f pods/fortune-app.yaml || echo "ℹ️ fortune-app pod may already exist"
 
-echo "⚙️ Creating nginx proxy configmap..."
-kubectl create configmap nginx-proxy-conf --from-file nginx/proxy.conf || echo "ℹ️ ConfigMap may already exist"
 
-echo "🔐 Deploying secure-monolith pod..."
-kubectl create -f pods/secure-monolith.yaml || echo "ℹ️ secure-monolith may already exist"
+sleep 30
 
-echo "🌐 Creating monolith service..."
-kubectl create -f services/monolith.yaml || echo "ℹ️ Service may already exist"
+kubectl port-forward fortune-app 10080:8080  || echo "ℹ️ fortune-app  port-forward  failed"
 
-echo "🔥 Creating firewall rule for monolith access..."
-gcloud compute firewall-rules create allow-monolith-nodeport \
-  --allow=tcp:31000 --quiet || echo "ℹ️ Firewall rule may already exist"
 
-# Step 7: Working with labels and endpoints
-echo "🔎 Listing monolith pods..."
-kubectl get pods -l "app=monolith"
 
-echo "🔎 Listing secure monolith pods..."
-kubectl get pods -l "app=monolith,secure=enabled"
+cd ~/orchestrate-with-kubernetes/kubernetes
 
-echo "🏷️ Labeling secure-monolith pod..."
-kubectl label pods secure-monolith 'secure=enabled' --overwrite
+kubectl create secret generic tls-certs --from-file tls/  
+kubectl create configmap nginx-proxy-conf --from-file nginx/proxy.conf  
+sleep 10
+kubectl create -f pods/secure-fortune.yaml
+sleep 10
+kubectl create -f services/fortune-app.yaml
 
-echo "🔍 Showing labels on secure-monolith:"
-kubectl get pods secure-monolith --show-labels
+sleep 20
 
-echo "🔎 Checking service endpoints..."
-kubectl describe services monolith | grep Endpoints
+gcloud compute firewall-rules create allow-fortune-nodeport --allow tcp:31000
 
-# Step 8: Deploy additional services (auth, hello, frontend)
-echo "📦 Deploying auth service..."
-kubectl create -f deployments/auth.yaml || echo "ℹ️ Auth deployment may already exist"
-kubectl create -f services/auth.yaml || echo "ℹ️ Auth service may already exist"
 
-echo "📦 Deploying hello service..."
-kubectl create -f deployments/hello.yaml || echo "ℹ️ Hello deployment may already exist"
-kubectl create -f services/hello.yaml || echo "ℹ️ Hello service may already exist"
+sleep 30
 
-echo "⚙️ Creating frontend configmap..."
-kubectl create configmap nginx-frontend-conf --from-file=nginx/frontend.conf || echo "ℹ️ ConfigMap may already exist"
+kubectl label pods secure-fortune 'secure=enabled'
 
-echo "🚀 Deploying frontend..."
-kubectl create -f deployments/frontend.yaml || echo "ℹ️ Frontend deployment may already exist"
-kubectl create -f services/frontend.yaml || echo "ℹ️ Frontend service may already exist"
 
-echo "🔍 Listing frontend service:"
-kubectl get services frontend
+sleep 30
+kubectl create -f deployments/auth.yaml
 
-echo "✅ Kubernetes setup script completed successfully."
+kubectl create -f services/auth.yaml
+kubectl create -f deployments/fortune-service.yaml
+kubectl create -f services/fortune-service.yaml
+kubectl create configmap nginx-frontend-conf --from-file=nginx/frontend.conf  
+kubectl create -f deployments/frontend.yaml  
+kubectl create -f services/frontend.yaml
+
+
