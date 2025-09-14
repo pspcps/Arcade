@@ -1,24 +1,16 @@
-# Define color variables
-GREEN="\033[0;32m"
-BLUE_BOLD="\033[1;34m"
-YELLOW="\033[1;33m"
-RED_BG="\033[41m"
-BOLD="\033[1m"
-RESET="\033[0m"#!/bin/bash
-
 
 echo
-echo "${BLUE_BOLD}⚡ Initializing GKE Cluster Setup...${RESET}"
+echo "⚡ Initializing GKE Cluster Setup..."
 echo
 
 # User Input Section
-echo "${GREEN}${BOLD}▬▬▬▬▬▬▬▬▬ CONFIGURATION PARAMETERS ▬▬▬▬▬▬▬▬▬${RESET}"
-read -p "${YELLOW}${BOLD}Enter CLUSTER_NAME (e.g., monitoring-cluster): ${RESET}" CLUSTER_NAME
-read -p "${YELLOW}${BOLD}Enter ZONE (e.g., us-central1-a): ${RESET}" ZONE
-read -p "${YELLOW}${BOLD}Enter NAMESPACE (e.g., gmp-test): ${RESET}" NAMESPACE
-read -p "${YELLOW}${BOLD}Enter REPO_NAME (e.g., hello-repo): ${RESET}" REPO_NAME
-read -p "${YELLOW}${BOLD}Enter INTERVAL for monitoring (e.g., 30s): ${RESET}" INTERVAL
-read -p "${YELLOW}${BOLD}Enter SERVICE_NAME (e.g., hello-service): ${RESET}" SERVICE_NAME
+echo "▬▬▬▬▬▬▬▬▬ CONFIGURATION PARAMETERS ▬▬▬▬▬▬▬▬▬"
+read -p "Enter CLUSTER_NAME (e.g., monitoring-cluster): " CLUSTER_NAME
+read -p "Enter ZONE (e.g., us-central1-a): " ZONE
+read -p "Enter NAMESPACE (e.g., gmp-test): " NAMESPACE
+read -p "Enter REPO_NAME (e.g., hello-repo): " REPO_NAME
+read -p "Enter INTERVAL for monitoring (e.g., 30s): " INTERVAL
+read -p "Enter SERVICE_NAME (e.g., hello-service): " SERVICE_NAME
 
 # Export all variables
 export CLUSTER_NAME ZONE NAMESPACE REPO_NAME INTERVAL SERVICE_NAME
@@ -26,22 +18,22 @@ export REGION="${ZONE%-*}"
 export PROJECT_ID=$(gcloud config get-value project)
 
 echo
-echo "${GREEN}${BOLD}${BOLD}Configuration Summary:${RESET}"
-echo "Cluster Name: ${BOLD}$CLUSTER_NAME${RESET}"
-echo "Zone: ${BOLD}$ZONE${RESET}"
-echo "Region: ${BOLD}$REGION${RESET}"
-echo "Namespace: ${BOLD}$NAMESPACE${RESET}"
-echo "Repository: ${BOLD}$REPO_NAME${RESET}"
-echo "Monitoring Interval: ${BOLD}$INTERVAL${RESET}"
-echo "Service Name: ${BOLD}$SERVICE_NAME${RESET}"
+echo "Configuration Summary:"
+echo "Cluster Name: $CLUSTER_NAME"
+echo "Zone: $ZONE"
+echo "Region: $REGION"
+echo "Namespace: $NAMESPACE"
+echo "Repository: $REPO_NAME"
+echo "Monitoring Interval: $INTERVAL"
+echo "Service Name: $SERVICE_NAME"
 echo
 
 # Cluster Creation
-echo "${GREEN}${BOLD}▬▬▬▬▬▬▬▬▬ CLUSTER CREATION ▬▬▬▬▬▬▬▬▬${RESET}"
-echo "${YELLOW}Setting compute zone...${RESET}"
+echo "▬▬▬▬▬▬▬▬▬ CLUSTER CREATION ▬▬▬▬▬▬▬▬▬"
+echo "Setting compute zone..."
 gcloud config set compute/zone $ZONE
 
-echo "${YELLOW}Creating GKE cluster with autoscaling...${RESET}"
+echo "Creating GKE cluster with autoscaling..."
 gcloud container clusters create $CLUSTER_NAME \
   --release-channel regular \
   --cluster-version latest \
@@ -51,23 +43,23 @@ gcloud container clusters create $CLUSTER_NAME \
   --enable-autoscaling \
   --no-enable-ip-alias
 
-echo "${YELLOW}Enabling Managed Prometheus...${RESET}"
+echo "Enabling Managed Prometheus..."
 gcloud container clusters update $CLUSTER_NAME \
   --enable-managed-prometheus \
   --zone $ZONE
-echo "${GREEN}✅ Cluster created and configured successfully!${RESET}"
+echo "✅ Cluster created and configured successfully!"
 echo
 
 # Namespace Setup
-echo "${GREEN}${BOLD}▬▬▬▬▬▬▬▬▬ NAMESPACE SETUP ▬▬▬▬▬▬▬▬▬${RESET}"
-echo "${YELLOW}Creating namespace...${RESET}"
+echo "▬▬▬▬▬▬▬▬▬ NAMESPACE SETUP ▬▬▬▬▬▬▬▬▬"
+echo "Creating namespace..."
 kubectl create ns $NAMESPACE
-echo "${GREEN}✅ Namespace $NAMESPACE created!${RESET}"
+echo "✅ Namespace $NAMESPACE created!"
 echo
 
 # Prometheus Application Deployment
-echo "${GREEN}${BOLD}▬▬▬▬▬▬▬▬▬ PROMETHEUS SETUP ▬▬▬▬▬▬▬▬▬${RESET}"
-echo "${YELLOW}Deploying Prometheus test application...${RESET}"
+echo "▬▬▬▬▬▬▬▬▬ PROMETHEUS SETUP ▬▬▬▬▬▬▬▬▬"
+echo "Deploying Prometheus test application..."
 cat > prometheus-app.yaml <<EOF
 apiVersion: apps/v1
 kind: Deployment
@@ -101,9 +93,9 @@ spec:
 EOF
 
 kubectl -n $NAMESPACE apply -f prometheus-app.yaml
-echo "${GREEN}✅ Prometheus test application deployed!${RESET}"
+echo "✅ Prometheus test application deployed!"
 
-echo "${YELLOW}Configuring Pod Monitoring...${RESET}"
+echo "Configuring Pod Monitoring..."
 cat > pod-monitoring.yaml <<EOF
 apiVersion: monitoring.googleapis.com/v1alpha1
 kind: PodMonitoring
@@ -121,20 +113,20 @@ spec:
 EOF
 
 kubectl -n $NAMESPACE apply -f pod-monitoring.yaml
-echo "${GREEN}✅ Pod monitoring configured with ${INTERVAL} interval!${RESET}"
+echo "✅ Pod monitoring configured with ${INTERVAL} interval!"
 echo
 
 # Hello Application Deployment
-echo "${GREEN}${BOLD}▬▬▬▬▬▬▬▬▬ HELLO APPLICATION DEPLOYMENT ▬▬▬▬▬▬▬▬▬${RESET}"
-echo "${YELLOW}Setting up hello application...${RESET}"
+echo "▬▬▬▬▬▬▬▬▬ HELLO APPLICATION DEPLOYMENT ▬▬▬▬▬▬▬▬▬"
+echo "Setting up hello application..."
 gsutil cp -r gs://spls/gsp510/hello-app/ .
 cd ~/hello-app
 
-echo "${YELLOW}Deploying initial version...${RESET}"
+echo "Deploying initial version..."
 kubectl -n $NAMESPACE apply -f manifests/helloweb-deployment.yaml
-echo "${GREEN}✅ Initial deployment complete!${RESET}"
+echo "✅ Initial deployment complete!"
 
-echo "${YELLOW}Updating deployment configuration...${RESET}"
+echo "Updating deployment configuration..."
 cat > manifests/helloweb-deployment.yaml <<EOF
 apiVersion: apps/v1
 kind: Deployment
@@ -165,12 +157,12 @@ EOF
 
 kubectl delete deployments helloweb -n $NAMESPACE
 kubectl -n $NAMESPACE apply -f manifests/helloweb-deployment.yaml
-echo "${GREEN}✅ Deployment updated!${RESET}"
+echo "✅ Deployment updated!"
 echo
 
 # Application Update
-echo "${GREEN}${BOLD}▬▬▬▬▬▬▬▬▬ APPLICATION UPDATE ▬▬▬▬▬▬▬▬▬${RESET}"
-echo "${YELLOW}Building and pushing new version...${RESET}"
+echo "▬▬▬▬▬▬▬▬▬ APPLICATION UPDATE ▬▬▬▬▬▬▬▬▬"
+echo "Building and pushing new version..."
 cat > main.go <<EOF
 package main
 
@@ -211,22 +203,22 @@ gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
 docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/hello-app:v2 .
 docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/hello-app:v2
 
-echo "${YELLOW}Updating deployment with new image...${RESET}"
+echo "Updating deployment with new image..."
 kubectl set image deployment/helloweb -n $NAMESPACE hello-app=$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/hello-app:v2
 
-echo "${YELLOW}Exposing service...${RESET}"
+echo "Exposing service..."
 kubectl expose deployment helloweb -n $NAMESPACE --name=$SERVICE_NAME --type=LoadBalancer --port 8080 --target-port 8080
-echo "${GREEN}✅ Application updated and service exposed!${RESET}"
+echo "✅ Application updated and service exposed!"
 echo
 
 # Monitoring Configuration
-echo "${GREEN}${BOLD}▬▬▬▬▬▬▬▬▬ MONITORING CONFIGURATION ▬▬▬▬▬▬▬▬▬${RESET}"
-echo "${YELLOW}Creating logging metric...${RESET}"
+echo "▬▬▬▬▬▬▬▬▬ MONITORING CONFIGURATION ▬▬▬▬▬▬▬▬▬"
+echo "Creating logging metric..."
 gcloud logging metrics create pod-image-errors \
   --description="Pod image errors monitoring" \
   --log-filter="resource.type=\"k8s_pod\" severity=WARNING"
 
-echo "${YELLOW}Creating alert policy...${RESET}"
+echo "Creating alert policy..."
 cat > awesome.json <<EOF_END
 {
   "displayName": "Pod Error Alert",
@@ -262,9 +254,9 @@ cat > awesome.json <<EOF_END
 EOF_END
 
 gcloud alpha monitoring policies create --policy-from-file="awesome.json"
-echo "${GREEN}✅ Monitoring and alerting configured!${RESET}"
+echo "✅ Monitoring and alerting configured!"
 echo
 
 # Completion Message
 
-echo "${GREEN}${BOLD}LAB COMPLETE!             ${RESET}"
+echo "LAB COMPLETE!            "
