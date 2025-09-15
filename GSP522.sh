@@ -2,6 +2,15 @@
 
 gcloud auth list
 
+
+echo
+echo "👉🏻 Go to this page: https://console.cloud.google.com/security/sensitive-data-protection/create/discoveryConfiguration;source=DATA_PROFILE_COVERAGE_DASHBOARD;discoveryType=4?project="
+echo
+echo
+
+read -p "Have You craeted Product coverage configuration, If yes than press enter?" 
+
+
 export ZONE=$(gcloud compute project-info describe --format="value(commonInstanceMetadata.items[google-compute-default-zone])")
 
 export REGION=$(gcloud compute project-info describe --format="value(commonInstanceMetadata.items[google-compute-default-region])")
