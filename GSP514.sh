@@ -60,12 +60,12 @@ gcloud dataplex assets create customer-orders \
   --resource-name=projects/$DEVSHELL_PROJECT_ID/datasets/customer_orders \
   --discovery-enabled
 
-# Create a Data Catalog tag template for protected customer data
-gcloud data-catalog tag-templates create protected_customer_data_template \
-    --location=$REGION \
-    --display-name="Protected Customer Data Template" \
-    --field=id=raw_data_flag,display-name="Raw Data Flag",type='enum(Yes|No)',required=TRUE \
-    --field=id=protected_contact_information_flag,display-name="Protected Contact Information Flag",type='enum(Yes|No)',required=TRUE
+# # Create a Data Catalog tag template for protected customer data
+# gcloud dataplex aspect-types create protected_customer_data_aspect \
+#     --location=$REGION \
+#     --display-name="Protected Customer Data Aspect" \
+#     --field=id=raw_data_flag,display-name="Raw Data Flag",type='enum(Yes|No)',required=TRUE \
+#     --field=id=protected_contact_information_flag,display-name="Protected Contact Information Flag",type='enum(Yes|No)',required=TRUE
 
 # Grant "dataWriter" role to user $USER_2 on the "customer-engagements" asset
 gcloud dataplex assets add-iam-policy-binding customer-engagements \
@@ -101,7 +101,7 @@ gsutil cp dq-customer-orders.yaml gs://$DEVSHELL_PROJECT_ID-dq-config
 
 
 
-read -p "\033[1;34mAttach Tags and than press enter.\033[0m" 
+read -p "Create Tag and Attach Tags and than press enter." 
 
 
 sleep 30
