@@ -2,7 +2,7 @@
 echo "Starting Execution"
 
 
-read -p "\033[1;34mEnter User2:\033[0m" USER_2
+read -p "Enter User2:" USER_2
 # Enable necessary Google Cloud services for Dataplex, Data Catalog, and Dataproc
 gcloud services enable \
   dataplex.googleapis.com \
@@ -100,15 +100,18 @@ EOF_CP
 gsutil cp dq-customer-orders.yaml gs://$DEVSHELL_PROJECT_ID-dq-config
 
 
-
+echo
+echo
+echo
 read -p "Create Tag and Attach Tags and than press enter." 
-
-
+echo
+echo
+echo
 sleep 30
 
-export PROJECT_ID=$(gcloud config get-value project)
-export ZONE=$(gcloud compute project-info describe --format="value(commonInstanceMetadata.items[google-compute-default-zone])")
-export REGION=$(echo "$ZONE" | cut -d '-' -f 1-2)
+# export PROJECT_ID=$(gcloud config get-value project)
+# export ZONE=$(gcloud compute project-info describe --format="value(commonInstanceMetadata.items[google-compute-default-zone])")
+# export REGION=$(echo "$ZONE" | cut -d '-' -f 1-2)
 
 
 gcloud dataplex datascans create data-quality customer-orders-data-quality-job \
