@@ -1,6 +1,8 @@
 
 echo "Starting Execution"
 
+
+read -p "\033[1;34mEnter User2:\033[0m" USER_2
 # Enable necessary Google Cloud services for Dataplex, Data Catalog, and Dataproc
 gcloud services enable \
   dataplex.googleapis.com \
