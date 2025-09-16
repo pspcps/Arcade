@@ -21,11 +21,11 @@ gcloud dataplex zones create customer-contact-raw-zone --location=$REGION --disp
 gcloud dataplex assets create contact-info --location=$REGION --display-name="Contact Info" --lake=ecommerce-lake --zone=customer-contact-raw-zone --resource-type=BIGQUERY_DATASET --resource-name=projects/$DEVSHELL_PROJECT_ID/datasets/customers --discovery-enabled 
 
 
-bq query --use_legacy_sql=false "
-  SELECT * FROM \`$DEVSHELL_PROJECT_ID.customers.contact_info\`
-  ORDER BY id
-  LIMIT 50
-"
+# bq query --use_legacy_sql=false "
+#   SELECT * FROM \`$DEVSHELL_PROJECT_ID.customers.contact_info\`
+#   ORDER BY id
+#   LIMIT 50
+# "
 
 
 cat > dq-customer-raw-data.yaml <<EOF_CP
@@ -50,11 +50,11 @@ gsutil cp dq-customer-raw-data.yaml gs://$DEVSHELL_PROJECT_ID-bucket
 
 
   
-bq query --use_legacy_sql=false "
-  SELECT * FROM \`$DEVSHELL_PROJECT_ID.customers.contact_info\`
-  ORDER BY id
-  LIMIT 50
-"
+# bq query --use_legacy_sql=false "
+#   SELECT * FROM \`$DEVSHELL_PROJECT_ID.customers.contact_info\`
+#   ORDER BY id
+#   LIMIT 50
+# "
 
 
 gcloud dataplex datascans create data-quality customer-orders-data-quality-job \
