@@ -67,6 +67,13 @@ EOF
 
 kubectl apply -f gb_frontend_ingress.yaml
 
+
+
+sleep 30
+
+gsutil -m cp -r gs://spls/gsp769/locust-image .
+
+
 sleep 240
 
 BACKEND_SERVICE=$(gcloud compute backend-services list | grep NAME | cut -d ' ' -f2)
@@ -74,6 +81,17 @@ BACKEND_SERVICE=$(gcloud compute backend-services list | grep NAME | cut -d ' ' 
 gcloud compute backend-services get-health $BACKEND_SERVICE --global
 
 echo
+
+
+gcloud builds submit \
+    --tag gcr.io/${GOOGLE_CLOUD_PROJECT}/locust-tasks:latest locust-image
+
+sleep 30
+gsutil cp gs://spls/gsp769/locust_deploy_v2.yaml .
+sed 's/${GOOGLE_CLOUD_PROJECT}/'$GOOGLE_CLOUD_PROJECT'/g' locust_deploy_v2.yaml | kubectl apply -f -
+
+sleep 30
+kubectl get service locust-main
 
 
 
@@ -215,20 +233,3 @@ kubectl apply -f gb_frontend_deployment.yaml
 
 
 
-
-
-sleep 30
-
-gsutil -m cp -r gs://spls/gsp769/locust-image .
-
-sleep 120
-
-gcloud builds submit \
-    --tag gcr.io/${GOOGLE_CLOUD_PROJECT}/locust-tasks:latest locust-image
-
-sleep 30
-gsutil cp gs://spls/gsp769/locust_deploy_v2.yaml .
-sed 's/${GOOGLE_CLOUD_PROJECT}/'$GOOGLE_CLOUD_PROJECT'/g' locust_deploy_v2.yaml | kubectl apply -f -
-
-sleep 30
-kubectl get service locust-main
