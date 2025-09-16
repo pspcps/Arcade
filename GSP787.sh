@@ -162,41 +162,103 @@ bq query --use_legacy_sql=false \
 echo
 echo "Task 6. Finding days with zero net new cases"
 
-# Prompt for human-readable dates
-echo -n "Please enter the start date (format: 23, Feb 2020): "
+#!/bin/bash
+
+# Function to convert "23, Feb 2020" -> "2020-02-23"
+convert_to_yyyymmdd() {
+  local input="$1"
+
+  # Remove commas
+  input=${input//,/}
+
+  # Split into day, month, year
+  read -r day month year <<< "$input"
+
+  # Check if all parts exist
+  if [[ -z "$day" || -z "$month" || -z "$year" ]]; then
+    echo ""
+    return 1
+  fi
+
+  # Normalize month to lowercase
+  month=$(echo "$month" | tr '[:upper:]' '[:lower:]')
+
+  # Map month name to number
+  case "$month" in
+    jan* ) month_num="01" ;;
+    feb* ) month_num="02" ;;
+    mar* ) month_num="03" ;;
+    apr* ) month_num="04" ;;
+    may  ) month_num="05" ;;
+    jun* ) month_num="06" ;;
+    jul* ) month_num="07" ;;
+    aug* ) month_num="08" ;;
+    sep* ) month_num="09" ;;
+    oct* ) month_num="10" ;;
+    nov* ) month_num="11" ;;
+    dec* ) month_num="12" ;;
+    * )
+      echo ""
+      return 1
+      ;;
+  esac
+
+  # Pad day with leading zero if needed
+  if (( 10#$day < 10 )); then
+    day="0$day"
+  fi
+
+  # Return ISO format date
+  echo "${year}-${month_num}-${day}"
+}
+
+echo
+echo "🧮 Task 6. Finding days with zero net new cases"
+
+# Prompt user
+echo -n "📅 Please enter the start date (e.g. 23, Feb 2020): "
 read raw_start_date
-echo -n "Please enter the end date (format: 11, March 2020): "
+echo -n "📅 Please enter the end date (e.g. 11, March 2020): "
 read raw_end_date
 
-# Convert to YYYY-MM-DD using `date`
-start_date=$(date -d "$raw_start_date" +%F 2>/dev/null)
-end_date=$(date -d "$raw_end_date" +%F 2>/dev/null)
+# Convert dates
+start_date=$(convert_to_yyyymmdd "$raw_start_date")
+end_date=$(convert_to_yyyymmdd "$raw_end_date")
 
-# Check if conversion was successful
+# Check conversion success
 if [[ -z "$start_date" || -z "$end_date" ]]; then
-  echo "❌ Invalid date format. Please use format like: 23, Feb 2020"
-  exit 1
+  echo "❌ Could not parse one or both dates."
+  echo "⚠️ Skipping query. Please check your date format."
+else
+  echo "✅ Using date range: $start_date to $end_date"
+  echo
+
+  # Run BigQuery query
+  bq query --use_legacy_sql=false \
+  "WITH india_cases_by_date AS (
+      SELECT date, SUM(cumulative_confirmed) AS cases
+      FROM \`bigquery-public-data.covid19_open_data.covid19_open_data\`
+      WHERE country_name = 'India' AND date BETWEEN '${start_date}' AND '${end_date}'
+      GROUP BY date
+      ORDER BY date
+  ),
+  india_previous_day_comparison AS (
+      SELECT
+        date,
+        cases,
+        LAG(cases) OVER (ORDER BY date) AS previous_day,
+        cases - LAG(cases) OVER (ORDER BY date) AS net_new_cases
+      FROM india_cases_by_date
+  )
+  SELECT COUNT(*) AS zero_new_case_days
+  FROM india_previous_day_comparison
+  WHERE net_new_cases = 0"
 fi
 
-echo "📅 Date range: $start_date to $end_date"
+echo
+echo "✅ Task 6 complete. Continuing script..."
 
-# Run BigQuery
-bq query --use_legacy_sql=false \
-"WITH india_cases_by_date AS (
-    SELECT date, SUM(cumulative_confirmed) AS cases
-    FROM \`bigquery-public-data.covid19_open_data.covid19_open_data\`
-    WHERE country_name = 'India' AND date BETWEEN '${start_date}' AND '${end_date}'
-    GROUP BY date
-    ORDER BY date ASC
-), india_previous_day_comparison AS (
-    SELECT date, cases,
-           LAG(cases) OVER(ORDER BY date) AS previous_day,
-           cases - LAG(cases) OVER(ORDER BY date) AS net_new_cases
-    FROM india_cases_by_date
-)
-SELECT COUNT(*) AS zero_new_case_days
-FROM india_previous_day_comparison
-WHERE net_new_cases = 0"
+
 
 
 # Task 7 - Doubling rate
@@ -253,23 +315,70 @@ ORDER BY recovery_rate DESC
 LIMIT ${limit}"
 
 #!/bin/bash
+#!/bin/bash
 
-# Task 9 - CDGR - Cumulative daily growth rate
+# Function to convert "June 20, 2020" -> "2020-06-20"
+convert_month_day_year_to_yyyymmdd() {
+  local input="$1"
+
+  # Remove commas
+  input=${input//,/}
+
+  # Split into parts: month day year
+  read -r month day year <<< "$input"
+
+  # Check if all parts exist
+  if [[ -z "$month" || -z "$day" || -z "$year" ]]; then
+    echo ""
+    return 1
+  fi
+
+  # Normalize month name to lowercase
+  month=$(echo "$month" | tr '[:upper:]' '[:lower:]')
+
+  # Map month name to number
+  case "$month" in
+    jan* ) month_num="01" ;;
+    feb* ) month_num="02" ;;
+    mar* ) month_num="03" ;;
+    apr* ) month_num="04" ;;
+    may  ) month_num="05" ;;
+    jun* ) month_num="06" ;;
+    jul* ) month_num="07" ;;
+    aug* ) month_num="08" ;;
+    sep* ) month_num="09" ;;
+    oct* ) month_num="10" ;;
+    nov* ) month_num="11" ;;
+    dec* ) month_num="12" ;;
+    * )
+      echo ""
+      return 1
+      ;;
+  esac
+
+  # Pad day with leading zero if needed
+  if (( 10#$day < 10 )); then
+    day="0$day"
+  fi
+
+  # Return ISO format date
+  echo "${year}-${month_num}-${day}"
+}
+
 echo
-echo "Task 9. CDGR - Cumulative daily growth rate"
-echo -n "Please enter the second date (format: June 20, 2020): "
+echo "🧮 Task 9. CDGR - Cumulative daily growth rate"
+echo -n "📅 Please enter the second date (format: June 20, 2020): "
 read raw_second_date
 
-# Convert input to YYYY-MM-DD
-second_date=$(date -d "$raw_second_date" +%F 2>/dev/null)
+second_date=$(convert_month_day_year_to_yyyymmdd "$raw_second_date")
 
-# Validate the result
 if [[ -z "$second_date" ]]; then
   echo "❌ Invalid date format. Please enter something like: June 20, 2020"
   exit 1
 fi
 
-echo "📅 Calculating CDGR between 2020-01-24 and $second_date"
+echo "✅ Calculating CDGR between 2020-01-24 and $second_date"
+echo
 
 # Run BigQuery query
 bq query --use_legacy_sql=false \
@@ -293,6 +402,7 @@ SELECT
   days_diff,
   SAFE_MULTIPLY(POWER(SAFE_DIVIDE(last_day_cases, first_day_cases), (1.0 / days_diff)) - 1, 100) AS cdgr_percent
 FROM summary"
+
 
 # Task 10 - Create a Looker Studio report
 echo
