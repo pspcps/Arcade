@@ -158,21 +158,6 @@ kubectl exec readiness-demo-pod -- touch /tmp/healthz
 
 kubectl describe pod readiness-demo-pod | grep ^Conditions -A 5
 
-sleep 10
-
-gsutil -m cp -r gs://spls/gsp769/locust-image .
-
-sleep 10
-
-gcloud builds submit \
-    --tag gcr.io/${GOOGLE_CLOUD_PROJECT}/locust-tasks:latest locust-image
-
-sleep 10
-gsutil cp gs://spls/gsp769/locust_deploy_v2.yaml .
-sed 's/${GOOGLE_CLOUD_PROJECT}/'$GOOGLE_CLOUD_PROJECT'/g' locust_deploy_v2.yaml | kubectl apply -f -
-
-sleep 10
-kubectl get service locust-main
 
 
 while true; do
@@ -227,3 +212,23 @@ spec:
 EOF
 
 kubectl apply -f gb_frontend_deployment.yaml
+
+
+
+
+
+sleep 10
+
+gsutil -m cp -r gs://spls/gsp769/locust-image .
+
+sleep 10
+
+gcloud builds submit \
+    --tag gcr.io/${GOOGLE_CLOUD_PROJECT}/locust-tasks:latest locust-image
+
+sleep 10
+gsutil cp gs://spls/gsp769/locust_deploy_v2.yaml .
+sed 's/${GOOGLE_CLOUD_PROJECT}/'$GOOGLE_CLOUD_PROJECT'/g' locust_deploy_v2.yaml | kubectl apply -f -
+
+sleep 10
+kubectl get service locust-main
