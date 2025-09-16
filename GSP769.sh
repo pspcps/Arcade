@@ -161,7 +161,7 @@ kubectl describe pod readiness-demo-pod | grep ^Conditions -A 5
 
 
 while true; do
-    echo -ne "\e[1;93mDo you Want to proceed? (Y/n): \e[0m"
+    echo -ne "\e[1;93mCheck Progress before 1, 1 and 3. Do you Want to proceed? (Y/n): \e[0m"
     read confirm
     case "$confirm" in
         [Yy]) 
@@ -217,18 +217,18 @@ kubectl apply -f gb_frontend_deployment.yaml
 
 
 
-sleep 10
+# sleep 10
 
-gsutil -m cp -r gs://spls/gsp769/locust-image .
+# gsutil -m cp -r gs://spls/gsp769/locust-image .
 
-sleep 10
+# sleep 10
 
-gcloud builds submit \
-    --tag gcr.io/${GOOGLE_CLOUD_PROJECT}/locust-tasks:latest locust-image
+# gcloud builds submit \
+#     --tag gcr.io/${GOOGLE_CLOUD_PROJECT}/locust-tasks:latest locust-image
 
-sleep 10
-gsutil cp gs://spls/gsp769/locust_deploy_v2.yaml .
-sed 's/${GOOGLE_CLOUD_PROJECT}/'$GOOGLE_CLOUD_PROJECT'/g' locust_deploy_v2.yaml | kubectl apply -f -
+# sleep 10
+# gsutil cp gs://spls/gsp769/locust_deploy_v2.yaml .
+# sed 's/${GOOGLE_CLOUD_PROJECT}/'$GOOGLE_CLOUD_PROJECT'/g' locust_deploy_v2.yaml | kubectl apply -f -
 
-sleep 10
-kubectl get service locust-main
+# sleep 10
+# kubectl get service locust-main
