@@ -82,9 +82,24 @@ gcloud compute backend-services get-health $BACKEND_SERVICE --global
 
 echo
 
+MAX_RETRIES=3
+RETRY_DELAY=30
 
-gcloud builds submit \
-    --tag gcr.io/${GOOGLE_CLOUD_PROJECT}/locust-tasks:latest locust-image
+for attempt in $(seq 1 $MAX_RETRIES); do
+    echo "📦 Attempt $attempt: Submitting build to Cloud Build..."
+    gcloud builds submit \
+        --tag gcr.io/${GOOGLE_CLOUD_PROJECT}/locust-tasks:latest locust-image && break
+
+    echo "❌ Build failed on attempt $attempt."
+    
+    if [[ $attempt -lt $MAX_RETRIES ]]; then
+        echo "⏳ Retrying in $RETRY_DELAY seconds..."
+        sleep $RETRY_DELAY
+    else
+        echo "🚫 Build failed after $MAX_RETRIES attempts. Exiting."
+    fi
+done
+
 
 sleep 30
 gsutil cp gs://spls/gsp769/locust_deploy_v2.yaml .
