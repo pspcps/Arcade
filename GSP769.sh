@@ -67,31 +67,13 @@ EOF
 
 kubectl apply -f gb_frontend_ingress.yaml
 
-sleep 60
+sleep 240
 
 BACKEND_SERVICE=$(gcloud compute backend-services list | grep NAME | cut -d ' ' -f2)
 
 gcloud compute backend-services get-health $BACKEND_SERVICE --global
 
 echo
-
-while true; do
-    echo -ne "\e[1;93mDo you Want to proceed? (Y/n): \e[0m"
-    read confirm
-    case "$confirm" in
-        [Yy]) 
-            echo -e "\e[34mRunning the command...\e[0m"
-            break
-            ;;
-        [Nn]|"") 
-            echo "Operation canceled."
-            break
-            ;;
-        *) 
-            echo -e "\e[31mInvalid input. Please enter Y or N.\e[0m" 
-            ;;
-    esac
-done
 
 
 gsutil -m cp -r gs://spls/gsp769/locust-image .
@@ -184,6 +166,28 @@ sleep 45
 kubectl exec readiness-demo-pod -- touch /tmp/healthz
 
 kubectl describe pod readiness-demo-pod | grep ^Conditions -A 5
+
+
+
+while true; do
+    echo -ne "\e[1;93mDo you Want to proceed? (Y/n): \e[0m"
+    read confirm
+    case "$confirm" in
+        [Yy]) 
+            echo -e "\e[34mRunning the command...\e[0m"
+            break
+            ;;
+        [Nn]|"") 
+            echo "Operation canceled."
+            break
+            ;;
+        *) 
+            echo -e "\e[31mInvalid input. Please enter Y or N.\e[0m" 
+            ;;
+    esac
+done
+
+
 
 kubectl delete pod gb-frontend
 
