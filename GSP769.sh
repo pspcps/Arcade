@@ -6,11 +6,16 @@ export REGION=$(gcloud compute project-info describe --format="value(commonInsta
 
 export PROJECT_ID=$(gcloud config get-value project)
 gcloud config set project $DEVSHELL_PROJECT_ID
+gcloud services enable cloudbuild.googleapis.com
 
 gcloud config set compute/zone "$ZONE"
 gcloud config set compute/region "$REGION"
 
 gcloud container clusters create test-cluster --num-nodes=3  --enable-ip-alias 
+
+
+gsutil -m cp -r gs://spls/gsp769/locust-image .
+
 
 cat << EOF > gb_frontend_pod.yaml
 apiVersion: v1
@@ -66,12 +71,6 @@ spec:
 EOF
 
 kubectl apply -f gb_frontend_ingress.yaml
-
-
-
-sleep 30
-
-gsutil -m cp -r gs://spls/gsp769/locust-image .
 
 
 sleep 240
