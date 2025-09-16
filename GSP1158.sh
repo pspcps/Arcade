@@ -1,4 +1,8 @@
 
+echo "Please enter your preferred Region (e.g., us-central1):"
+read -p "REGION: " REGION
+
+
 
 gcloud auth list
 
