@@ -1,19 +1,56 @@
 #!/bin/bash
+#!/bin/bash
 
-# Task 1 - Total confirmed cases
 echo "Task 1. Total confirmed cases"
-echo -n "Please enter the month (format: MM): "
-read input_month
-echo -n "Please enter the date (format: DD): "
+
+# Prompt for month input
+echo -n "Please enter the month (format: MM or Apr or April): "
+read input_month_raw
+
+# Normalize to lowercase for comparison
+input_month=$(echo "$input_month_raw" | tr '[:upper:]' '[:lower:]')
+
+# Map to MM
+case $input_month in
+  "01"|"jan"|"january")   input_month="01" ;;
+  "02"|"feb"|"february")  input_month="02" ;;
+  "03"|"mar"|"march")     input_month="03" ;;
+  "04"|"apr"|"april")     input_month="04" ;;
+  "05"|"may")             input_month="05" ;;
+  "06"|"jun"|"june")      input_month="06" ;;
+  "07"|"jul"|"july")      input_month="07" ;;
+  "08"|"aug"|"august")    input_month="08" ;;
+  "09"|"sep"|"september") input_month="09" ;;
+  "10"|"oct"|"october")   input_month="10" ;;
+  "11"|"nov"|"november")  input_month="11" ;;
+  "12"|"dec"|"december")  input_month="12" ;;
+  *)
+    echo "❌ Invalid month input: '$input_month_raw'"
+    exit 1
+    ;;
+esac
+
+# Prompt for day
+echo -n "Please enter the day (format: DD): "
 read input_day
 
+# Pad day with leading zero if needed
+if [[ ${#input_day} -eq 1 ]]; then
+  input_day="0$input_day"
+fi
+
+# Construct full date
 year="2020"
 input_date="${year}-${input_month}-${input_day}"
 
+echo "📅 Querying for date: $input_date"
+
+# Run BigQuery
 bq query --use_legacy_sql=false \
-"SELECT sum(cumulative_confirmed) as total_cases_worldwide
+"SELECT SUM(cumulative_confirmed) AS total_cases_worldwide
  FROM \`bigquery-public-data.covid19_open_data.covid19_open_data\`
- WHERE date='${input_date}'"
+ WHERE date = '${input_date}'"
+
 
 # Task 2 - Worst affected areas
 echo
@@ -49,21 +86,64 @@ bq query --use_legacy_sql=false \
     ORDER BY total_confirmed_cases DESC
 )
 WHERE total_confirmed_cases > ${case_threshold}"
+#!/bin/bash
 
 # Task 4 - Fatality ratio
 echo
 echo "Task 4. Fatality ratio"
-echo -n "Please enter the start date (format: YYYY-MM-DD): "
-read start_date
-echo -n "Please enter the end date (format: YYYY-MM-DD): "
-read end_date
 
+# Prompt for month input
+echo -n "Please enter the month (format: MM, Apr, April, etc.): "
+read input_month_raw
+
+# Normalize to lowercase
+input_month=$(echo "$input_month_raw" | tr '[:upper:]' '[:lower:]')
+
+# Hardcoded year
+year="2020"
+
+# Convert to MM and determine max days
+case $input_month in
+  "01"|"jan"|"january")   mm="01"; max_day="31" ;;
+  "02"|"feb"|"february")
+    mm="02"
+    # Leap year check for 2020
+    max_day="29"
+    ;;
+  "03"|"mar"|"march")     mm="03"; max_day="31" ;;
+  "04"|"apr"|"april")     mm="04"; max_day="30" ;;
+  "05"|"may")             mm="05"; max_day="31" ;;
+  "06"|"jun"|"june")      mm="06"; max_day="30" ;;
+  "07"|"jul"|"july")      mm="07"; max_day="31" ;;
+  "08"|"aug"|"august")    mm="08"; max_day="31" ;;
+  "09"|"sep"|"september") mm="09"; max_day="30" ;;
+  "10"|"oct"|"october")   mm="10"; max_day="31" ;;
+  "11"|"nov"|"november")  mm="11"; max_day="30" ;;
+  "12"|"dec"|"december")  mm="12"; max_day="31" ;;
+  *)
+    echo "❌ Invalid month input: '$input_month_raw'"
+    exit 1
+    ;;
+esac
+
+# Build start and end date
+start_date="${year}-${mm}-01"
+end_date="${year}-${mm}-${max_day}"
+
+echo "📅 Calculating fatality ratio for: $start_date to $end_date"
+
+# Run BigQuery
 bq query --use_legacy_sql=false \
-"SELECT sum(cumulative_confirmed) as total_confirmed_cases,
-       sum(cumulative_deceased) as total_deaths,
-       (sum(cumulative_deceased)/sum(cumulative_confirmed))*100 as case_fatality_ratio
-FROM \`bigquery-public-data.covid19_open_data.covid19_open_data\`
-WHERE country_name='Italy' AND date BETWEEN '${start_date}' AND '${end_date}'"
+"SELECT
+   SUM(cumulative_confirmed) AS total_confirmed_cases,
+   SUM(cumulative_deceased) AS total_deaths,
+   SAFE_DIVIDE(SUM(cumulative_deceased), SUM(cumulative_confirmed)) * 100 AS case_fatality_ratio
+FROM
+  \`bigquery-public-data.covid19_open_data.covid19_open_data\`
+WHERE
+  country_name = 'Italy'
+  AND date BETWEEN '${start_date}' AND '${end_date}'"
+
 
 # Task 5 - Identifying specific day
 echo
@@ -77,29 +157,47 @@ bq query --use_legacy_sql=false \
  WHERE country_name='Italy' AND cumulative_deceased > ${death_threshold}
  ORDER BY date ASC
  LIMIT 1"
+#!/bin/bash
 
-# Task 6 - Finding days with zero net new cases
 echo
 echo "Task 6. Finding days with zero net new cases"
-echo -n "Please enter the start date (format: YYYY-MM-DD): "
-read start_date
-echo -n "Please enter the end date (format: YYYY-MM-DD): "
-read end_date
 
+# Prompt for human-readable dates
+echo -n "Please enter the start date (format: 23, Feb 2020): "
+read raw_start_date
+echo -n "Please enter the end date (format: 11, March 2020): "
+read raw_end_date
+
+# Convert to YYYY-MM-DD using `date`
+start_date=$(date -d "$raw_start_date" +%F 2>/dev/null)
+end_date=$(date -d "$raw_end_date" +%F 2>/dev/null)
+
+# Check if conversion was successful
+if [[ -z "$start_date" || -z "$end_date" ]]; then
+  echo "❌ Invalid date format. Please use format like: 23, Feb 2020"
+  exit 1
+fi
+
+echo "📅 Date range: $start_date to $end_date"
+
+# Run BigQuery
 bq query --use_legacy_sql=false \
 "WITH india_cases_by_date AS (
     SELECT date, SUM(cumulative_confirmed) AS cases
     FROM \`bigquery-public-data.covid19_open_data.covid19_open_data\`
-    WHERE country_name ='India' AND date BETWEEN '${start_date}' AND '${end_date}'
+    WHERE country_name = 'India' AND date BETWEEN '${start_date}' AND '${end_date}'
     GROUP BY date
     ORDER BY date ASC
 ), india_previous_day_comparison AS (
-    SELECT date, cases, LAG(cases) OVER(ORDER BY date) AS previous_day, cases - LAG(cases) OVER(ORDER BY date) AS net_new_cases
+    SELECT date, cases,
+           LAG(cases) OVER(ORDER BY date) AS previous_day,
+           cases - LAG(cases) OVER(ORDER BY date) AS net_new_cases
     FROM india_cases_by_date
 )
-SELECT count(*)
+SELECT COUNT(*) AS zero_new_case_days
 FROM india_previous_day_comparison
 WHERE net_new_cases = 0"
+
 
 # Task 7 - Doubling rate
 echo
@@ -154,27 +252,46 @@ WHERE cases > 50000
 ORDER BY recovery_rate DESC
 LIMIT ${limit}"
 
+#!/bin/bash
+
 # Task 9 - CDGR - Cumulative daily growth rate
 echo
 echo "Task 9. CDGR - Cumulative daily growth rate"
-echo -n "Please enter the second date (format: YYYY-MM-DD): "
-read second_date
+echo -n "Please enter the second date (format: June 20, 2020): "
+read raw_second_date
 
+# Convert input to YYYY-MM-DD
+second_date=$(date -d "$raw_second_date" +%F 2>/dev/null)
+
+# Validate the result
+if [[ -z "$second_date" ]]; then
+  echo "❌ Invalid date format. Please enter something like: June 20, 2020"
+  exit 1
+fi
+
+echo "📅 Calculating CDGR between 2020-01-24 and $second_date"
+
+# Run BigQuery query
 bq query --use_legacy_sql=false \
 "WITH france_cases AS (
     SELECT date, SUM(cumulative_confirmed) AS total_cases
     FROM \`bigquery-public-data.covid19_open_data.covid19_open_data\`
-    WHERE country_name='France' AND date IN ('2020-01-24', '${second_date}')
+    WHERE country_name = 'France' AND date IN ('2020-01-24', '${second_date}')
     GROUP BY date
     ORDER BY date
 ), summary AS (
-    SELECT total_cases AS first_day_cases, LEAD(total_cases) OVER(ORDER BY date) AS last_day_cases,
-           DATE_DIFF(LEAD(date) OVER(ORDER BY date), date, day) AS days_diff
+    SELECT
+      total_cases AS first_day_cases,
+      LEAD(total_cases) OVER(ORDER BY date) AS last_day_cases,
+      DATE_DIFF(LEAD(date) OVER(ORDER BY date), date, DAY) AS days_diff
     FROM france_cases
     LIMIT 1
 )
-SELECT first_day_cases, last_day_cases, days_diff,
-       POWER((last_day_cases/first_day_cases),(1/days_diff))-1 AS cdgr
+SELECT
+  first_day_cases,
+  last_day_cases,
+  days_diff,
+  SAFE_MULTIPLY(POWER(SAFE_DIVIDE(last_day_cases, first_day_cases), (1.0 / days_diff)) - 1, 100) AS cdgr_percent
 FROM summary"
 
 # Task 10 - Create a Looker Studio report
