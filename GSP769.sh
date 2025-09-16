@@ -217,7 +217,7 @@ kubectl apply -f gb_frontend_deployment.yaml
 
 
 
-sleep 10
+sleep 30
 
 gsutil -m cp -r gs://spls/gsp769/locust-image .
 
@@ -226,9 +226,9 @@ sleep 120
 gcloud builds submit \
     --tag gcr.io/${GOOGLE_CLOUD_PROJECT}/locust-tasks:latest locust-image
 
-sleep 10
+sleep 30
 gsutil cp gs://spls/gsp769/locust_deploy_v2.yaml .
 sed 's/${GOOGLE_CLOUD_PROJECT}/'$GOOGLE_CLOUD_PROJECT'/g' locust_deploy_v2.yaml | kubectl apply -f -
 
-sleep 10
+sleep 30
 kubectl get service locust-main
