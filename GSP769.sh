@@ -51,6 +51,7 @@ spec:
 EOF
 
 kubectl apply -f gb_frontend_cluster_ip.yaml
+
 cat << EOF > gb_frontend_ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -66,15 +67,11 @@ EOF
 
 kubectl apply -f gb_frontend_ingress.yaml
 
-sleep 415
+sleep 60
 
 BACKEND_SERVICE=$(gcloud compute backend-services list | grep NAME | cut -d ' ' -f2)
-gcloud compute backend-services get-health $BACKEND_SERVICE --global
 
-BACKEND_SERVICE=$(gcloud compute backend-services list | grep NAME | cut -d ' ' -f2)
 gcloud compute backend-services get-health $BACKEND_SERVICE --global
-
-kubectl get ingress gb-frontend-ingress
 
 echo
 
