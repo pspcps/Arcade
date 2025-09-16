@@ -195,7 +195,7 @@ kubectl describe pod readiness-demo-pod | grep ^Conditions -A 5
 
 
 while true; do
-    echo -ne "\e[1;93mCheck Progress before 1, 1 and 3. Do you Want to proceed? (Y/n): \e[0m"
+    echo -ne "\e[1;93mCheck Progress Till step 3. Do you Want to proceed? (Y/n): \e[0m"
     read confirm
     case "$confirm" in
         [Yy]) 
