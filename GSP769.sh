@@ -11,10 +11,12 @@ gcloud services enable cloudbuild.googleapis.com
 gcloud config set compute/zone "$ZONE"
 gcloud config set compute/region "$REGION"
 
+gsutil -m cp -r gs://spls/gsp769/locust-image .
+
+
+
 gcloud container clusters create test-cluster --num-nodes=3  --enable-ip-alias 
 
-
-gsutil -m cp -r gs://spls/gsp769/locust-image .
 
 
 cat << EOF > gb_frontend_pod.yaml
