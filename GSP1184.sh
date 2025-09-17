@@ -38,8 +38,8 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
 # Step 2: Define service account email
 SA_EMAIL=${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com
 SA="serviceAccount:$SA_EMAIL"
-SA_EMAIL1=${PROJECT_NUMBER}-compute@developer.gserviceaccount.com
-SA1="serviceAccount:$SA_EMAIL"
+SA_EMAIL1="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+SA1="serviceAccount:$SA_EMAIL1"
 
 echo "👤 Target Service Account: $SA_EMAIL"
 
@@ -77,7 +77,7 @@ done
 
 
 echo "Creating and navigating to project directory..."
-mkdir vuln-scan && cd vuln-scan
+mkdir vuln-scan && cd vuln-scan   
 
 echo "Creating Dockerfile..."
 cat > ./Dockerfile << EOF
