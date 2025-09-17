@@ -59,6 +59,7 @@ ROLES=(
   "roles/storage.objectCreator"
   "roles/artifactregistry.writer"
   "roles/cloudbuild.workerPoolUser"
+   "roles/logging.logWriter"
 )
 
 # Step 4: Bind each role
