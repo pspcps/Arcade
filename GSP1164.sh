@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# ==============================================
-#  Security Command Center Export 
-#  Created by Dr. Abhishek Cloud Tutorials
-# ==============================================
-
 clear
 
 # Function to display spinner during long operations
