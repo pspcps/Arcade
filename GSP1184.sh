@@ -33,6 +33,42 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
         --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
         --role="roles/ondemandscanning.admin"
 
+
+
+# Step 2: Define service account email
+SA_EMAIL=${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com
+SA="serviceAccount:$SA_EMAIL"
+
+echo "👤 Target Service Account: $SA_EMAIL"
+
+# Step 3: Define all the roles to assign
+ROLES=(
+  "roles/cloudfunctions.developer"
+  "roles/run.admin"
+  "roles/appengine.admin"
+  "roles/container.developer"
+  "roles/compute.instanceAdmin.v1"
+  "roles/firebase.admin"
+  "roles/cloudkms.cryptoKeyDecrypter"
+  "roles/secretmanager.secretAccessor"
+  "roles/iam.serviceAccountUser"
+  "roles/logging.configWriter"
+  "roles/storage.admin"
+  "roles/storage.objectCreator"
+  "roles/artifactregistry.writer"
+  "roles/cloudbuild.workerPoolUser"
+)
+
+# Step 4: Bind each role
+for ROLE in "${ROLES[@]}"; do
+  echo "🔑 Granting $ROLE to $SA_EMAIL"
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="$SA" \
+    --role="$ROLE" \
+    --quiet
+done
+
+
 echo "Creating and navigating to project directory..."
 mkdir vuln-scan && cd vuln-scan
 
