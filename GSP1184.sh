@@ -38,6 +38,8 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
 # Step 2: Define service account email
 SA_EMAIL=${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com
 SA="serviceAccount:$SA_EMAIL"
+SA_EMAIL1=${PROJECT_NUMBER}-compute@developer.gserviceaccount.com
+SA1="serviceAccount:$SA_EMAIL"
 
 echo "👤 Target Service Account: $SA_EMAIL"
 
@@ -64,6 +66,11 @@ for ROLE in "${ROLES[@]}"; do
   echo "🔑 Granting $ROLE to $SA_EMAIL"
   gcloud projects add-iam-policy-binding "$PROJECT_ID" \
     --member="$SA" \
+    --role="$ROLE" \
+    --quiet
+
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="$SA1" \
     --role="$ROLE" \
     --quiet
 done
