@@ -206,6 +206,151 @@ gcloud sql instances clone '$DST_INSTANCE_ID'  postgres-orders-pitr --point-in-t
 \$\$;
 EOF_CP
 
+
+
+
+cat  <<EOF
+
+
+************************************************************************************************
+**********************************Copy And past in any tool************************************
+**********************************************************************************************
+
+
+
+gcloud compute ssh "$POSTGRES_VM_NAME" \
+  --zone="$POSTGRES_VM_ZONE" \
+  --quiet
+
+----------------Step1---------------
+
+sudo su - postgres
+
+psql
+
+
+\c postgres;
+
+CREATE EXTENSION pglogical;
+
+\c orders;
+
+CREATE EXTENSION pglogical;
+
+
+----------------Step2---------------
+
+CREATE USER $MIGRATION_USER PASSWORD '$MIGRATION_PASSWORD';
+ALTER DATABASE orders OWNER TO $MIGRATION_USER;
+ALTER ROLE $MIGRATION_USER WITH REPLICATION;
+
+
+ALTER TABLE inventory_items ADD PRIMARY KEY (id);
+
+
+
+GRANT USAGE ON SCHEMA pglogical TO $MIGRATION_USER;
+GRANT ALL ON SCHEMA pglogical TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.tables TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.depend TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.local_node TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.local_sync_status TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.node TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.node_interface TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.queue TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.replication_set TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.replication_set_seq TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.replication_set_table TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.sequence_state TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.subscription TO $MIGRATION_USER;
+
+
+GRANT USAGE ON SCHEMA public TO $MIGRATION_USER;
+GRANT ALL ON SCHEMA public TO $MIGRATION_USER;
+GRANT SELECT ON public.distribution_centers TO $MIGRATION_USER;
+GRANT SELECT ON public.inventory_items TO $MIGRATION_USER;
+GRANT SELECT ON public.order_items TO $MIGRATION_USER;
+GRANT SELECT ON public.products TO $MIGRATION_USER;
+GRANT SELECT ON public.users TO $MIGRATION_USER;
+
+
+
+ALTER TABLE public.distribution_centers OWNER TO $MIGRATION_USER;
+ALTER TABLE public.inventory_items OWNER TO $MIGRATION_USER;
+ALTER TABLE public.order_items OWNER TO $MIGRATION_USER;
+ALTER TABLE public.products OWNER TO $MIGRATION_USER;
+ALTER TABLE public.users OWNER TO $MIGRATION_USER;
+
+
+
+----------------Step3---------------
+
+
+\c postgres;
+
+
+GRANT USAGE ON SCHEMA pglogical TO $MIGRATION_USER;
+GRANT ALL ON SCHEMA pglogical TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.tables TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.depend TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.local_node TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.local_sync_status TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.node TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.node_interface TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.queue TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.replication_set TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.replication_set_seq TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.replication_set_table TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.sequence_state TO $MIGRATION_USER;
+GRANT SELECT ON pglogical.subscription TO $MIGRATION_USER;
+
+
+
+
+---------------------------------------------Step4---------------
+
+
+supersecret!
+
+\c orders
+
+supersecret!
+
+
+GRANT ALL PRIVILEGES ON TABLE $TABLE_TO_SECURE_WITH_IAM TO "$IAM_USER_EMAIL";
+\q
+
+ ----------------------------------------------------Step5---------------
+
+supersecret!
+
+\c orders
+
+supersecret!
+
+
+insert into distribution_centers values(-80.1918,25.7617,'Miami FL',11);
+\q
+
+
+
+----------------Step6---------------
+
+gcloud auth login --quiet
+
+gcloud projects get-iam-policy $DEVSHELL_PROJECT_ID
+
+
+gcloud sql instances clone '$DST_INSTANCE_ID'  postgres-orders-pitr --point-in-time ''
+ 
+
+\q
+
+
+
+\$\$;
+EOF
+
 cat dbScript.txt 
 
 echo "==== Please copy the above SQL and execute it inside your PostgreSQL psql shell on the source VM ===="
