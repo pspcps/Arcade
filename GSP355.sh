@@ -162,7 +162,13 @@ GRANT SELECT ON pglogical.subscription TO $MIGRATION_USER;
 
 
 
+----------------------------------------------
+              DO Manual Work
+
 ---------------------------------------------Step4---------------
+
+
+
 
 
 supersecret!
@@ -173,15 +179,6 @@ supersecret!
 
 
 GRANT ALL PRIVILEGES ON TABLE $TABLE_TO_SECURE_WITH_IAM TO "$IAM_USER_EMAIL";
-\q
-
- ----------------------------------------------------Step5---------------
-
-supersecret!
-
-\c orders
-
-supersecret!
 
 
 insert into distribution_centers values(-80.1918,25.7617,'Miami FL',11);
