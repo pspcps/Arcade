@@ -206,6 +206,8 @@ gcloud sql instances clone '$DST_INSTANCE_ID'  postgres-orders-pitr --point-in-t
 \$\$;
 EOF_CP
 
+cat dbScript.txt 
+
 echo "==== Please copy the above SQL and execute it inside your PostgreSQL psql shell on the source VM ===="
 
 
