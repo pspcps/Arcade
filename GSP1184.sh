@@ -226,9 +226,11 @@ EOF
 echo "Submitting final Cloud Build..."
 gcloud builds submit
 
+
 echo "Creating Dockerfile..."
 cat > ./Dockerfile << EOF
 FROM python:3.8-alpine 
+
 
 # App
 WORKDIR /app
@@ -239,18 +241,13 @@ RUN pip3 install gunicorn==20.1.0
 RUN pip3 install Werkzeug==2.2.2
 
 CMD exec gunicorn --bind :\$PORT --workers 1 --threads 8 main:app
+
 EOF
 
 echo "Submitting final build with Dockerfile..."
 gcloud builds submit
 echo
 
-# Safely delete the script if it exists
-SCRIPT_NAME="arcadecrew.sh"
-if [ -f "$SCRIPT_NAME" ]; then
-    echo "Deleting the script ($SCRIPT_NAME) for safety purposes..."
-    rm -- "$SCRIPT_NAME"
-fi
 
 echo
 # Completion message
