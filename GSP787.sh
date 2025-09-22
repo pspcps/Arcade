@@ -153,12 +153,35 @@ echo "Task 5. Identifying specific day"
 echo -n "Please enter the death threshold: "
 read death_threshold
 
+# bq query --use_legacy_sql=false \
+# "SELECT date
+#  FROM \`bigquery-public-data.covid19_open_data.covid19_open_data\`
+#  WHERE country_name='Italy' AND cumulative_deceased > ${death_threshold}
+#  ORDER BY date ASC
+#  LIMIT 1"
+
 bq query --use_legacy_sql=false \
-"SELECT date
- FROM \`bigquery-public-data.covid19_open_data.covid19_open_data\`
- WHERE country_name='Italy' AND cumulative_deceased > ${death_threshold}
- ORDER BY date ASC
- LIMIT 1"
+" WITH DailyItalyDeaths AS (
+SELECT
+date,
+SUM(cumulative_deceased) AS total_deaths
+FROM
+\`bigquery-public-data.covid19_open_data.covid19_open_data\`
+WHERE
+country_name = 'Italy'
+GROUP BY
+date
+)
+SELECT
+date
+FROM
+DailyItalyDeaths
+WHERE
+total_deaths > ${death_threshold}
+ORDER BY
+date ASC
+LIMIT 1"
+
 #!/bin/bash
 
 echo
