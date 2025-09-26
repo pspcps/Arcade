@@ -79,7 +79,7 @@ resource "google_compute_instance" "tf-instance-1" {
   zone         = "$ZONE"
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-11"
+      image = "debian-cloud/debian-12"
     }
   }
   network_interface {
@@ -94,7 +94,7 @@ resource "google_compute_instance" "tf-instance-2" {
   zone         = "$ZONE"
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-11"
+      image = "debian-cloud/debian-12"
     }
   }
   network_interface {
@@ -171,7 +171,7 @@ resource "google_compute_instance" "tf-instance-1" {
   zone         = "$ZONE"
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-11"
+      image = "debian-cloud/debian-12"
     }
   }
   network_interface {
@@ -186,7 +186,7 @@ resource "google_compute_instance" "tf-instance-2" {
   zone         = "$ZONE"
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-11"
+      image = "debian-cloud/debian-12"
     }
   }
   network_interface {
@@ -201,7 +201,7 @@ resource "google_compute_instance" "$INSTANCE" {
   zone         = "$ZONE"
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-11"
+      image = "debian-cloud/debian-12"
     }
   }
   network_interface {
@@ -259,7 +259,7 @@ resource "google_compute_instance" "tf-instance-1" {
   zone         = "$ZONE"
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-11"
+      image = "debian-cloud/debian-12"
     }
   }
   network_interface {
@@ -275,7 +275,7 @@ resource "google_compute_instance" "tf-instance-2" {
   zone         = "$ZONE"
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-11"
+      image = "debian-cloud/debian-12"
     }
   }
   network_interface {
