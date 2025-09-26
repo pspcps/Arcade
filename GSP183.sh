@@ -4,7 +4,26 @@ echo "Starting Execution$"
 
 read -p "Enter ZONE: " ZONE
 
-gcloud compute instances create dev-instance --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --machine-type=e2-medium --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default --metadata=enable-oslogin=true --maintenance-policy=MIGRATE --provisioning-model=STANDARD --scopes=https://www.googleapis.com/auth/cloud-platform --tags=http-server --create-disk=auto-delete=yes,boot=yes,device-name=dev-instance,image=projects/debian-cloud/global/images/debian-11-bullseye-v20240213,mode=rw,size=10,type=projects/$DEVSHELL_PROJECT_ID/zones/$ZONE/diskTypes/pd-balanced --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --labels=goog-ec-src=vm_add-gcloud --reservation-affinity=any
+gcloud compute instances create dev-instance \
+  --project=$DEVSHELL_PROJECT_ID \
+  --zone=$ZONE \
+  --machine-type=e2-medium \
+  --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default \
+  --metadata=enable-oslogin=true \
+  --maintenance-policy=MIGRATE \
+  --provisioning-model=STANDARD \
+  --scopes=https://www.googleapis.com/auth/cloud-platform \
+  --tags=http-server \
+  --image-family=debian-12 \
+  --image-project=debian-cloud \
+  --boot-disk-size=10GB \
+  --boot-disk-type=pd-balanced \
+  --boot-disk-device-name=dev-instance \
+  --no-shielded-secure-boot \
+  --shielded-vtpm \
+  --shielded-integrity-monitoring \
+  --labels=goog-ec-src=vm_add-gcloud \
+  --reservation-affinity=any
 
 gcloud compute firewall-rules create allow-http --allow tcp:80 --description "Allow HTTP traffic" --direction INGRESS --target-tags http-server --network default
 

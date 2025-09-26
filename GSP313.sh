@@ -71,7 +71,7 @@ gcloud compute instance-templates create lb-backend-template \
    --subnet=default \
    --tags=allow-health-check \
    --machine-type=e2-medium \
-   --image-family=debian-11 \
+   --image-family=debian-12 \
    --image-project=debian-cloud \
    --metadata=startup-script='#!/bin/bash
      apt-get update
