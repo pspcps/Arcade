@@ -9,7 +9,7 @@ read -rp "Enter the GCP zone to create the VM (e.g., europe-west1-c): " ZONE
 # Variables
 VM_NAME="quickstart-vm"
 MACHINE_TYPE="e2-small"
-IMAGE_FAMILY="debian-11"
+IMAGE_FAMILY="debian-12"
 IMAGE_PROJECT="debian-cloud"
 
 # Check and create firewall rules for HTTP and HTTPS
