@@ -25,7 +25,7 @@ echo "Creating VM instance: $INSTANCE_NAME in zone $ZONE (region $REGION)..."
 gcloud compute instances create "$INSTANCE_NAME" \
   --zone="$ZONE" \
   --machine-type="e2-medium" \
-  --image-family="debian-11" \
+  --image-family="debian-12" \
   --image-project="debian-cloud" \
   --boot-disk-size="10GB" \
   --boot-disk-type="pd-balanced" \
