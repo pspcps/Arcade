@@ -6,7 +6,7 @@ set -e
 # Constants
 VM_NAME="speaking-with-a-webpage"
 IMAGE_PROJECT="debian-cloud"
-IMAGE_FAMILY="debian-11"
+IMAGE_FAMILY="debian-12"
 MACHINE_TYPE="e2-medium"
 
 # Prompt for user input
