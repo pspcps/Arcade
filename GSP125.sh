@@ -52,7 +52,7 @@ sleep 15
 echo "🔧 Installing packages and cloning repo via SSH..."
 gcloud compute ssh "$VM_NAME" --zone="$ZONE" --command="
   sudo apt-get update -y && \
-  sudo apt-get install -y git maven openjdk-11-jdk lsof && \
+  sudo apt-get install -y git maven  openjdk-17-jdk lsof && \
   if [ ! -d speaking-with-a-webpage ]; then
     git clone https://github.com/googlecodelabs/speaking-with-a-webpage.git
   else
