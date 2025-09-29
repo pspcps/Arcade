@@ -23,7 +23,8 @@ export REGION=$(gcloud compute project-info describe \
 
 # Step 2: Sourcing setup script...
 echo "📦 Sourcing setup script..."
-source <(gsutil cat gs://cloud-training/gsp318/marking/setup_marking_v2.sh)
+# source <(gsutil cat gs://cloud-training/gsp318/marking/setup_marking_v2.sh)
+source <(gsutil cat gs://spls/gsp318/script.sh)
 
 # Step 3: Downloading and extracting application...
 echo "📥 Downloading and extracting application..."
