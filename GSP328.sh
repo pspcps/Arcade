@@ -34,6 +34,29 @@ RANDOM_BG_COLOR=${BG_COLORS[$RANDOM % ${#BG_COLORS[@]}]}
 
 #----------------------------------------------------start--------------------------------------------------#
 
+
+echo -n "Enter PUBLIC_BILLING_SERVICE: "
+read PUBLIC_BILLING_SERVICE
+
+echo -n "Enter FRONTEND_STAGING_SERVICE: "
+read FRONTEND_STAGING_SERVICE
+
+echo -n "Enter PRIVATE_BILLING_SERVICE: "
+read PRIVATE_BILLING_SERVICE
+
+echo -n "Enter BILLING_SERVICE_ACCOUNT: "
+read BILLING_SERVICE_ACCOUNT
+
+echo -n "Enter BILLING_PROD_SERVICE: "
+read BILLING_PROD_SERVICE
+
+echo -n "Enter FRONTEND_SERVICE_ACCOUNT: "
+read FRONTEND_SERVICE_ACCOUNT
+
+echo -n "Enter FRONTEND_PRODUCTION_SERVICE: "
+read FRONTEND_PRODUCTION_SERVICE
+
+
 echo "${RANDOM_BG_COLOR}${RANDOM_TEXT_COLOR}${BOLD}Starting Execution${RESET}"
 
 # Step 1: Configure Google Cloud environment for the project
