@@ -263,29 +263,31 @@ curl -s -H 'Content-Type: application/json' \
 echo "${MAGENTA}${BOLD}Retrieving new video annotation results...${RESET}"
 curl -s -H 'Content-Type: application/json' -H "Authorization: Bearer $ACCESS_TOKEN" 'https://videointelligence.googleapis.com/v1/operations/OPERATION_FROM_PREVIOUS_REQUEST' > result1.json
 
-# Function to prompt user to check their progress
-function check_progress {
-    while true; do
-        echo
-        echo -n "${BOLD}${YELLOW}Have you checked your progress for Task 3 & Task 4? (Y/N): ${RESET}"
-        read -r user_input
-        if [[ "$user_input" == "Y" || "$user_input" == "y" ]]; then
-            echo
-            echo "${BOLD}${GREEN}Great! Proceeding to the next steps...${RESET}"
-            echo
-            break
-        elif [[ "$user_input" == "N" || "$user_input" == "n" ]]; then
-            echo
-            echo "${BOLD}${RED}Please check your progress for Task 3 & Task 4 and then press Y to continue.${RESET}"
-        else
-            echo
-            echo "${BOLD}${MAGENTA}Invalid input. Please enter Y or N.${RESET}"
-        fi
-    done
-}
+# # Function to prompt user to check their progress
+# function check_progress {
+#     while true; do
+#         echo
+#         echo -n "${BOLD}${YELLOW}Have you checked your progress for Task 3 & Task 4? (Y/N): ${RESET}"
+#         read -r user_input
+#         if [[ "$user_input" == "Y" || "$user_input" == "y" ]]; then
+#             echo
+#             echo "${BOLD}${GREEN}Great! Proceeding to the next steps...${RESET}"
+#             echo
+#             break
+#         elif [[ "$user_input" == "N" || "$user_input" == "n" ]]; then
+#             echo
+#             echo "${BOLD}${RED}Please check your progress for Task 3 & Task 4 and then press Y to continue.${RESET}"
+#         else
+#             echo
+#             echo "${BOLD}${MAGENTA}Invalid input. Please enter Y or N.${RESET}"
+#         fi
+#     done
+# }
 
-# Call function to check progress before proceeding
-check_progress
+# # Call function to check progress before proceeding
+# check_progress
+
+sleep 90
 
 # Step 34: Authenticate to Google Cloud without launching a browser
 echo "${GREEN}${BOLD}Authenticating to Google Cloud...${RESET}"
