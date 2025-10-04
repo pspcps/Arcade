@@ -17,10 +17,6 @@ RESET_FORMAT=$'\033[0m'
 BOLD_TEXT=$'\033[1m'
 UNDERLINE_TEXT=$'\033[4m'
 
-clear
-
-
-gcloud auth list
 
 export ZONE=$(gcloud compute project-info describe --format="value(commonInstanceMetadata.items[google-compute-default-zone])")
 
