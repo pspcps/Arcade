@@ -9,7 +9,7 @@ RESET=`tput sgr0`
 # Gather inputs for the required variables, cycling through colors
 echo -n -e "${BOLD}${YELLOW_TEXT}Enter the ZONE1 value:${RESET} " 
 read ZONE 
-echo -n -e "${BOLD}${YELLOW_TEXT}Enter the ZONE2 value:${RESET} "  "ZONE2" 
+echo -n -e "${BOLD}${YELLOW_TEXT}Enter the ZONE2 value:${RESET} "
 read ZONE2
 
 export REGION=${ZONE%-*}
