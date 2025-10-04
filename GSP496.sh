@@ -80,7 +80,7 @@ roleRef:
 EOF
 
 
-sleep 20
+sleep 40
 
 
 gcloud iam service-accounts create demo-developer
@@ -88,13 +88,15 @@ gcloud iam service-accounts create demo-developer
 
 MYPROJECT=$(gcloud config list --format 'value(core.project)')
 
+sleep 20
+
 
 gcloud projects add-iam-policy-binding "${MYPROJECT}" --role=roles/container.developer --member="serviceAccount:demo-developer@${MYPROJECT}.iam.gserviceaccount.com"
 
 
 gcloud iam service-accounts keys create key.json --iam-account "demo-developer@${MYPROJECT}.iam.gserviceaccount.com"
 
-sleep 15
+sleep 45
 
 gcloud auth activate-service-account --key-file=key.json
 
