@@ -11,7 +11,7 @@
 ```
 curl -L -O https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/41048.sh
 
-sudo chmod +x GSP41048063.sh
+sudo chmod +x 41048.sh
 
 ./41048.sh
 ```
