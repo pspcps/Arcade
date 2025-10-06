@@ -1,18 +1,11 @@
 
-## ☎️ HelpDesk(If faced any issue post Error Here): https://t.me/+1OrvGuPgJCc2NzVl
+export PROJECT=$(gcloud projects list --format="value(PROJECT_ID)")
 
-## 📋 52+ Skill Badge Solution Sheet [📄 View Google Sheet](https://docs.google.com/spreadsheets/d/1UY1yh_xCRGealyBqSAejjkBSdgjqEj5M_XIQmveGJnU/edit?gid=0#gid=0)
+gcloud storage buckets update gs://$PROJECT-bucket --no-uniform-bucket-level-access
 
+gcloud storage buckets update gs://$PROJECT-bucket --web-main-page-suffix=index.html --web-error-page=error.html
 
-## 🔗 Let’s Connect 👤 **LinkedIn**: [Prakash Seervi](https://www.linkedin.com/in/prakashseervi63/)
+gcloud storage objects update gs://$PROJECT-bucket/index.html --add-acl-grant=entity=AllUsers,role=READER
 
-
----
-```
-curl -L -O https://raw.githubusercontent.com/pspcps/Arcade/refs/heads/main/41048.sh
-
-sudo chmod +x 41048.sh
-
-./41048.sh
-```
+gcloud storage objects update gs://$PROJECT-bucket/error.html --add-acl-grant=entity=AllUsers,role=READER
 
