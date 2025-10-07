@@ -25,6 +25,15 @@ RESET=`tput sgr0`
 
 echo "${BG_MAGENTA}${BOLD}Starting Execution${RESET}"
 
+# Define color variables
+YELLOW_TEXT=$'\033[0;93m'
+
+
+
+# Gather inputs for the required variables, cycling through colors
+echo -n -e "${BOLD}${YELLOW_TEXT}Enter Region :${RESET} " 
+read REGION 
+
 gcloud config set project $DEVSHELL_PROJECT_ID
 
 git clone https://github.com/GoogleCloudPlatform/training-data-analyst
