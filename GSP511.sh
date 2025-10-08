@@ -1,4 +1,11 @@
 
+YELLOW='\033[0;33m'
+RESET=`tput sgr0`
+
+
+# Gather inputs for the required variables, cycling through colors
+echo -n -e "${YELLOW}Enter ZONE :${RESET} " 
+read ZONE
 
 gcloud auth list
 
