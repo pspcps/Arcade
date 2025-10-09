@@ -16,7 +16,8 @@ read -rp "Enter value for VALUE_Y2: " VALUE_Y2
 read -rp "Enter UDF function name for FUNC_1 (e.g., soccer.shot_distance): " FUNC_1
 read -rp "Enter UDF function name for FUNC_2 (e.g., soccer.shot_angle): " FUNC_2
 
-
+FUNC_1="${FUNC_1##*.}"
+FUNC_2="${FUNC_2##*.}"
 
 bq load --source_format=NEWLINE_DELIMITED_JSON --autodetect $DEVSHELL_PROJECT_ID:soccer.$EVENT gs://spls/bq-soccer-analytics/events.json
 bq load --source_format=CSV --autodetect $DEVSHELL_PROJECT_ID:soccer.$TABLE gs://spls/bq-soccer-analytics/tags2name.csv
@@ -140,7 +141,7 @@ predicted_isGoal_probs[ORDINAL(1)].prob AS predictedGoalProb,
 * EXCEPT (predicted_isGoal, predicted_isGoal_probs),
 FROM
 ML.PREDICT(
-MODEL \`$MODEL\`, 
+MODEL \`$DEVSHELL_PROJECT_ID.$MODEL\`, 
 (
  SELECT
    Events.playerId,
