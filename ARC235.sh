@@ -55,7 +55,7 @@ EOF_END
 
 gcloud functions deploy cf-demo \
   --gen2 \
-  --runtime python312 \
+  --runtime python313 \
   --entry-point hello_http \
   --source . \
   --region $REGION \
