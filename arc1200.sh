@@ -3,6 +3,13 @@
 # Exit on errors
 set -e
 
+
+read -p "Please enter the region to use for bucket creation (e.g., us-central1): " REGION
+
+
+echo "📍 Using region: $REGION"
+
+
 # Fetch the current GCP Project ID
 PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
 
@@ -13,23 +20,22 @@ fi
 
 echo "✅ Using Project ID: $PROJECT_ID"
 
-# Check if the 'app' bucket exists to fetch the region from
-APP_BUCKET="${PROJECT_ID}-app"
-REGION=""
+# # Check if the 'app' bucket exists to fetch the region from
+# APP_BUCKET="${PROJECT_ID}-app"
+# REGION=""
 
-if gsutil ls -b "gs://${APP_BUCKET}" &>/dev/null; then
-  echo "ℹ️ Found existing bucket: $APP_BUCKET"
-  REGION=$(gsutil ls -L -b "gs://${APP_BUCKET}" 2>/dev/null | grep "Location constraint" | awk -F": " '{print $2}')
-  echo "✅ Region found from app bucket: $REGION"
-fi
+# if gsutil ls -b "gs://${APP_BUCKET}" &>/dev/null; then
+#   echo "ℹ️ Found existing bucket: $APP_BUCKET"
+#   REGION=$(gsutil ls -L -b "gs://${APP_BUCKET}" 2>/dev/null | grep "Location constraint" | awk -F": " '{print $2}')
+#   echo "✅ Region found from app bucket: $REGION"
+# fi
 
-# If region still not found, ask the user to input it manually
-if [[ -z "$REGION" ]]; then
-  echo "❓ Region not found from the app bucket or configuration."
-  read -p "Please enter the region to use for bucket creation (e.g., us-central1): " REGION
-fi
+# # If region still not found, ask the user to input it manually
+# if [[ -z "$REGION" ]]; then
+#   echo "❓ Region not found from the app bucket or configuration."
+  
+# fi
 
-echo "📍 Using region: $REGION"
 
 # Define bucket names
 PRIVATE_BUCKET="${PROJECT_ID}-private-bucket"
