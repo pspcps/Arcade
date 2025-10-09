@@ -109,9 +109,9 @@ SELECT
 Events.subEventName AS shotType,
 /* 101 is known Tag for 'goals' from goals table */
 (101 IN UNNEST(Events.tags.id)) AS isGoal,
-\`$FUNC_1\`(Events.positions[ORDINAL(1)].x,
+\`soccer.$FUNC_1\`(Events.positions[ORDINAL(1)].x,
 Events.positions[ORDINAL(1)].y) AS shotDistance,
-\`$FUNC_2\`(Events.positions[ORDINAL(1)].x,
+\`soccer.$FUNC_2\`(Events.positions[ORDINAL(1)].x,
 Events.positions[ORDINAL(1)].y) AS shotAngle
 FROM
 \`soccer.$EVENT\` Events
@@ -129,7 +129,7 @@ Competitions.name != 'World Cup' AND
 eventName = 'Shot' OR
 (eventName = 'Free Kick' AND subEventName IN ('Free kick shot', 'Penalty'))
 ) AND
-\`$FUNC_2\`(Events.positions[ORDINAL(1)].x,
+\`soccer.$FUNC_2\`(Events.positions[ORDINAL(1)].x,
 Events.positions[ORDINAL(1)].y) IS NOT NULL
 ;
 "
