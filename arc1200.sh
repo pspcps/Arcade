@@ -50,6 +50,7 @@ if gsutil ls -b "gs://${PRIVATE_BUCKET}" &>/dev/null; then
   echo "ℹ️ Private bucket already exists: $PRIVATE_BUCKET"
 else
   gsutil mb -p "$PROJECT_ID" -l "$REGION" -b on "gs://${PRIVATE_BUCKET}/"
+   gcloud storage buckets update gs://${PRIVATE_BUCKET} --pap
   echo "✅ Created private bucket: $PRIVATE_BUCKET"
 fi
 
